@@ -1,3 +1,24 @@
+# Project Allelo
+
+Project Allelo is the repository for the research-influence experiment genealogy
+rooted in **D-E5**, the paper's Experiment 5 from *Inter-Agent Influence*.
+Official local experiment codes include **A-E140**, **A-E140b**, and **A-E150**.
+See [experiment names and lineage](PROJECT.md) before adding a condition or figure.
+
+- Source authority: [Cooperative-AI-Foundation/inter-agent-influence](https://github.com/Cooperative-AI-Foundation/inter-agent-influence), pinned at `2e70dcd171584217fc0cba45662ff7547b369619`.
+- Repository: [andyjphu/project-allelo](https://github.com/andyjphu/project-allelo), renamed from `e5-experiment-lineage` on 2026-11-06.
+- Current executed conditions: [A-E140](https://github.com/andyjphu/project-allelo/tree/e140-collaboration/experiments/e5_lineage) and [A-E140b](https://github.com/andyjphu/project-allelo/tree/e140b-vague-collaboration/experiments/e5_lineage).
+- Proposed descendant: **A-E150**, based on A-E140b; exact model-visible changes remain subject to the existing review and sign-off gates.
+
+This project rename changes attribution and documentation, not the experimental
+conditions. Frozen packages, model-visible prompts, raw traces, hashes, and
+historical commit identities retain their recorded bytes. Legacy branch and path
+names below are artifact locators; official human-facing names use the project
+prefix. The upstream README is retained below as source documentation, with its
+original paper numbering.
+
+---
+
 # Inter-Agent Influence Evaluations
 
 Code for *Inter-Agent Influence: Evaluating Persuasion, Deception, and Coercion in Multi-Agent Systems* (NeurIPS 2026): five environments in which one LLM agent tries to change another agent's decision, the scorers, and the analysis pipeline behind every table and figure in the paper. Built on UK AISI's Inspect AI platform. The transcripts and per-sample tables are a separate gated dataset: https://huggingface.co/datasets/Cooperative-AI-Foundation/inter-agent-influence-eval.

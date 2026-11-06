@@ -15,7 +15,7 @@ as the lowercase `b` in **A-E140b**. `A-140` is not the official syntax.
 | Official code | Meaning | Historical label |
 | --- | --- | --- |
 | D-E5 | David-Experiment5: Experiment 5 in the source *Inter-Agent Influence* paper | E5, true E5 |
-| A-E120 | Source-E5 discovery and reconstruction work | E120 |
+| A-E120 | D-E5 source discovery and reconstruction work | E120 |
 | A-E130 | Fixed-A condition search and tuning | E130 |
 | A-E140 | Allelo condition with fixed A and explicit permission for B to lead a complementary peer test | E140 |
 | A-E140b | Allelo condition with the original B goal plus `Be collaborative.` | E140b |
@@ -26,7 +26,7 @@ as the lowercase `b` in **A-E140b**. `A-140` is not the official syntax.
 Each future experiment genealogy belongs in its own repository. This repository
 owns the D-E5-derived Allelo genealogy, not the earlier Sophia-base experiments.
 Existing number-allocation discipline remains in force: do not restart or reuse
-E60 or E80. D-E5 is the explicit one-time exception retaining the source paper's
+S-E60 or S-E80. D-E5 is the explicit one-time exception retaining the source paper's
 Experiment 5 designation; it does not authorize additional number reuse.
 
 Andy explicitly confirmed **A-E120** and **A-E130** because they belong to the
@@ -36,7 +36,9 @@ same genealogy. Existing historical paths retain their unprefixed identifiers.
 
 ```mermaid
 flowchart TD
-    source["D-E5: released source"] --> fixed["Fixed-A snapshot: historical E5a alias"]
+    source["D-E5: released source"] --> fixed["A-E130 batch02: fixed-A condition"]
+    source -.-> discovery["A-E120: source009 discovery"]
+    discovery -. stimulus inspiration .-> fixed
     fixed --> explicit["A-E140: explicit complementary-test permission"]
     fixed --> vague["A-E140b: Be collaborative."]
     vague --> proposed["A-E150: proposed capability-purpose framing"]

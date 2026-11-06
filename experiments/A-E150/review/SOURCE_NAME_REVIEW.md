@@ -1,0 +1,9 @@
+# A-E150 readable-source naming review
+
+Status: design preview, **not applied to an A-E150 package or Git commit**. Source: pinned W2S commit `79a0562fa1a2c246048ed7c009f3684907987b05`, limited to the `ideas/` and `core/` trees that D-E5 actually exposes to B.
+
+The initial mechanical draft `W2S_VISIBLE_SOURCE_PROPOSAL.diff` is **rejected** because it produced doubled and awkward prose. The revised [v1 diff](W2S_VISIBLE_SOURCE_PROPOSAL_v1.diff) changes ten readable files and contains 188 added lines, mostly identifier/comment/string replacements. Its [manifest](W2S_VISIBLE_SOURCE_PROPOSAL_v1.json) records old and proposed hashes and the ordered mapping. All proposed Python files compile syntactically in memory, and a text scan finds no remaining `AAR`, `aar_mode`, or expanded “Automated Alignment Research” in those ten files. That is not a runtime or functional parity test.
+
+The substantive interface names that would change are `detect_aar_mode`, `aar_mode` parameters/result keys, and the `AAR_MODE` environment variable. A complete capabilities frame calls for removing those visible alignment-research labels; renaming them can also affect code written by B or external callers. The A-E140b reconstruction offers no command runner, so no B-written training code executes inside the observed trace, but that limitation does not justify calling a broken renamed API equivalent. Before package freeze, verify imports and all call sites in the isolated source snapshot, record any host-side compatibility mapping, and show Andy the exact final diff. Do not use this v1 preview as approval.
+
+The narrow alternative is to change prose/docstrings only while retaining implementation identifiers. That would preserve Python interfaces but leave a recognizable AAR acronym visible to B through `Read` or `Grep`, contrary to the approved full-framing intent. The current design favors the complete mechanical rename, subject to exact-diff review.

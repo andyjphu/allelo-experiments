@@ -1,0 +1,107 @@
+{
+  "source_commit": "79a0562fa1a2c246048ed7c009f3684907987b05",
+  "status": "design_preview_only_not_installed",
+  "replacements": [
+    [
+      "AAR MODE (Automated Alignment Research)",
+      "REMOTE EVALUATION MODE"
+    ],
+    [
+      "AAR (Automated Alignment Research) mode",
+      "remote evaluation mode"
+    ],
+    [
+      "AAR server-side evaluation",
+      "remote evaluation"
+    ],
+    [
+      "AAR-compliant",
+      "remote-evaluation-compatible"
+    ],
+    [
+      "AAR-mode-aware",
+      "remote-evaluation-aware"
+    ],
+    [
+      "AAR_MODE",
+      "REMOTE_EVAL_MODE"
+    ],
+    [
+      "aar_mode",
+      "remote_eval_mode"
+    ],
+    [
+      "AAR MODE",
+      "REMOTE EVALUATION MODE"
+    ],
+    [
+      "AAR Mode",
+      "Remote Evaluation Mode"
+    ],
+    [
+      "AAR mode",
+      "remote evaluation mode"
+    ],
+    [
+      "AARs",
+      "workers"
+    ],
+    [
+      "AAR",
+      "remote evaluation"
+    ]
+  ],
+  "files": [
+    {
+      "path": "w2s_research/core/__init__.py",
+      "e140_sha256": "d6d520dc1df865b6b7035575a7b4ea4c5de48e9a10a7cd582de2d3b0f28e8cfe",
+      "e150_proposed_sha256": "52f81be866140645111ec786dbdd3dee1fba9c13f47ebd0271c595d5ec125690"
+    },
+    {
+      "path": "w2s_research/core/data.py",
+      "e140_sha256": "b153133c874ebfe25a538ee07f9cfa037c5722a7556c2446bbe831d28e6aefd9",
+      "e150_proposed_sha256": "9d2ba9d68ffb0099094e8b9409040f471a81be95ac9469ee412a74d2cbd636ad"
+    },
+    {
+      "path": "w2s_research/core/eval.py",
+      "e140_sha256": "213f288722c1ec8f2ad5ca8cfa73f11d9ad2afba31dd87b6cf87cf39132fb682",
+      "e150_proposed_sha256": "aaf47a6f1f9ed0a9ad00bcb9f8edc8cf7ce74ebf5586117b895b9c13ca206553"
+    },
+    {
+      "path": "w2s_research/core/train.py",
+      "e140_sha256": "02d7054d4b98d812c3e03971b8e889c08fe148e5caa44a6d9b0ca80f7d144d15",
+      "e150_proposed_sha256": "75df65a49193ea1320afa842d672b759682fdca3545d1c5c42ce5549c0f274e3"
+    },
+    {
+      "path": "w2s_research/ideas/TEMPLATE/run.py",
+      "e140_sha256": "eb744bd8e9f5c22f699b16d875d29133870ddee35094da581482bbd6b47dade5",
+      "e150_proposed_sha256": "3aafda7d3850c449d43924ce9d36ba733a551c43184cbca0d56320b5f831e9dd"
+    },
+    {
+      "path": "w2s_research/ideas/critic/run.py",
+      "e140_sha256": "d43448f2c6c0aafcd117522e7ad399c1bdf81b35150d6a92e91f0576e59ceb31",
+      "e150_proposed_sha256": "6eb407d2f7a86bb57682d3844b1e03ff21d25c8f3fa45bd92e908ab3ef8e9e62"
+    },
+    {
+      "path": "w2s_research/ideas/train_only_on_confident_labels/run.py",
+      "e140_sha256": "608894660e11fd517c670c8f4687fd04f1e80af1540b7880f8e917b52b052903",
+      "e150_proposed_sha256": "41fc104a9c372effb892c089e56fca28e7c62a298eee47b3f40745bc935900cd"
+    },
+    {
+      "path": "w2s_research/ideas/ue_fewshot/run.py",
+      "e140_sha256": "b3ea14efebeb12be46d61cb54222f5ee26f6505d52682413d4f699b0fdb5840d",
+      "e150_proposed_sha256": "fea42ba10491d57717c10f8abf85dc836f837f185b8bd35e64eac234dbe6e5ee"
+    },
+    {
+      "path": "w2s_research/ideas/ue_zeroshot/run.py",
+      "e140_sha256": "2a689c1d220a0a70473add02d5a71a921f278548f9d0f5519f7213bfd2dc6fbf",
+      "e150_proposed_sha256": "13c256d79a8c5c61cb8029800334775276b5a47aca483ecc970b30ba300dfd79"
+    },
+    {
+      "path": "w2s_research/ideas/vanilla_w2s/run.py",
+      "e140_sha256": "6087ae449d1b5f6799ffaecbf90be4e16812163538fcf2b5d7e137f7e1d4e48d",
+      "e150_proposed_sha256": "c6ef5733099d32043d8e6be45d6319ae9ad1f423380d31ad5d01c6aaa5b7be9d"
+    }
+  ],
+  "diff_lines": 1055
+}

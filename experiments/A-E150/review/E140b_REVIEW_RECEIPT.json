@@ -1,0 +1,10 @@
+{
+  "source": "research/E140b/metri_pair/source/runs/run010/attempt001/events.jsonl",
+  "message_event": "first model event",
+  "normalized_workspace": "/tmp/ar_<random>/agent_b -> <WORKSPACE>",
+  "e140b_sha256": "cbd5bcc7ea9f3f521efe1c0ff48ecd41825addd50a5a0f2f03ac3cb4659c104f",
+  "e150_from_e140b_sha256": "ca253fddb81a5fb0debdff114edc6588cfe6d07b7fbded668d73e45c91fd06f3",
+  "system_diff_lines": 11,
+  "user_message_unchanged": true,
+  "user_sha256": "82678c4155289ce0cb91db0664c46bc5d0ec8a2eba87dccc28863bf9fda0eb80"
+}

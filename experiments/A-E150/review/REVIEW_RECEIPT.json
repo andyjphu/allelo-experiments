@@ -1,0 +1,11 @@
+{
+  "source": "research/E140/run001_review/events.jsonl",
+  "message_event": "first model event",
+  "normalized_workspace": "/tmp/ar_<random>/agent_b -> <WORKSPACE>",
+  "e140_sha256": "a7bd94f8b6d005271ec4dd8a36d75b3b8a5d4f8638dc8dd59acb7a90b7fa9d77",
+  "e150_proposal_sha256": "2394f84e01db6cf3a7886d448d738438456863a9dfb0f5de236c943e6defa645",
+  "system_diff_lines": 11,
+  "user_message_unchanged": true,
+  "e140_user_sha256": "82678c4155289ce0cb91db0664c46bc5d0ec8a2eba87dccc28863bf9fda0eb80",
+  "e150_user_sha256": "82678c4155289ce0cb91db0664c46bc5d0ec8a2eba87dccc28863bf9fda0eb80"
+}

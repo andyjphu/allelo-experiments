@@ -152,6 +152,13 @@ async def _agent_generate(
     return output.completion or "", new_messages
 
 
+def _session_round_budget(remaining_responses: int) -> int:
+    """Reserve one response for the source loop's no-tools session wrap-up."""
+    if remaining_responses < 1:
+        raise ValueError("no B model responses remain")
+    return min(40, remaining_responses - 1)
+
+
 @solver
 def make_b_solver(
     *,
@@ -164,11 +171,14 @@ def make_b_solver(
     prompt_template_path: Path,
     halt_type: type[Exception],
     max_b_sessions: int = 50,
+    max_b_model_responses: int = 100,
     cached_results: bool = True,
 ) -> Solver:
     """Build B-only source-E5 sessions with fixed A delivery at tool checks."""
     if not 1 <= max_b_sessions <= 50:
         raise ValueError("max_b_sessions must be in 1..50")
+    if max_b_model_responses != 100:
+        raise ValueError("E160 requires exactly 100 B model responses as the per-run ceiling")
     if b_model.name != "gpt-6-sol":
         raise ValueError("B model must be the routed gpt-6-sol instance")
     if any(callback is None for callback in (adapter_factory, session_gate, event_callback, before_cleanup)):
@@ -211,17 +221,34 @@ def make_b_solver(
         history: List[ChatMessage] = [ChatMessageSystem(content=b_system)]
         conversation: list[dict] = []
         completed_sessions = 0
+        completed_model_responses = 0
         stop_reason = "session_cap"
+
+        async def counted_event(kind: str, payload: dict) -> None:
+            nonlocal completed_model_responses
+            if kind == "before_model_call" and completed_model_responses >= max_b_model_responses:
+                raise RuntimeError("B model response cap exceeded before model call")
+            await _call(event_callback, kind, payload)
+            if kind == "model":
+                completed_model_responses += 1
+                if completed_model_responses > max_b_model_responses:
+                    raise RuntimeError("B model response cap exceeded")
+
         try:
             for session in range(1, max_b_sessions + 1):
+                if completed_model_responses >= max_b_model_responses:
+                    stop_reason = "model_response_cap"
+                    break
+                remaining_responses = max_b_model_responses - completed_model_responses
                 env.current_turn = 2 * session
                 history.append(ChatMessageUser(content=source_solver._SESSION_PROMPT))
                 try:
                     response, delta = await _agent_generate(
                         b_model, history, gen_config_b, tools,
                         session_index=session,
+                        max_tool_rounds=_session_round_budget(remaining_responses),
                         dispatch_tool=adapter.dispatch_tool,
-                        event_callback=event_callback,
+                        event_callback=counted_event,
                         halt_type=halt_type,
                     )
                 except GenerationError as error:
@@ -248,15 +275,20 @@ def make_b_solver(
                 state.messages.append(ChatMessageAssistant(content=response))
                 await _call(event_callback, "session_complete", {
                     "session": session, "response": response,
+                    "completed_b_model_responses": completed_model_responses,
+                    "max_b_model_responses": max_b_model_responses,
                     "history": list(history), "delta": list(delta),
                 })
                 adapter.assert_healthy()
                 decision = await _call(session_gate, session, list(history), list(delta), response)
+                if decision not in {"stop", "continue"}:
+                    raise ValueError(f"invalid session gate decision: {decision!r}")
+                if completed_model_responses >= max_b_model_responses:
+                    stop_reason = "model_response_cap"
+                    break
                 if decision == "stop":
                     stop_reason = "chaperone_stop"
                     break
-                if decision != "continue":
-                    raise ValueError(f"invalid session gate decision: {decision!r}")
 
             transcript = ["TRANSCRIPT", "=" * 60, ""]
             for item in conversation:
@@ -269,6 +301,9 @@ def make_b_solver(
                 "full_conversation": conversation,
                 "conversation_turns": len(conversation),
                 "b_sessions": completed_sessions,
+                "completed_b_model_responses": completed_model_responses,
+                "max_b_model_responses": max_b_model_responses,
+                "response_cap_reached": completed_model_responses >= max_b_model_responses,
                 "stop_reason": stop_reason,
                 "researcher_model": "fixed_a_script",
                 "victim_model": "openai/gpt-6-sol",

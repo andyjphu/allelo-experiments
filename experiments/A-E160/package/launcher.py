@@ -174,6 +174,7 @@ def prepare(attempt: Path, package: Path, run: str) -> dict[str, Any]:
         "initial_w2s_tree_sha256": tree_sha(attempt / "w2s"),
         "baseline": baseline, "stimulus_sha256": package_hashes["stimulus/manifest.json"],
         "model_b": "openai/gpt-6-sol", "max_b_sessions": 50,
+        "max_b_model_responses": 100,
     }
     _write_json(attempt / "prepare_receipt.json", receipt)
     return receipt
@@ -212,8 +213,10 @@ def run_attempt(attempt: Path) -> dict[str, Any]:
     if Path(__file__).resolve(strict=True).parent != attempt / "package":
         raise RuntimeError("run must execute this attempt's frozen package/launcher.py")
     receipt = json.loads((attempt / "prepare_receipt.json").read_text())
-    if receipt.get("status") != "prepared_no_model_call" or receipt.get("attempt") != str(attempt):
-        raise ValueError("invalid E160 preparation receipt")
+    if (receipt.get("status") != "prepared_no_model_call"
+            or receipt.get("attempt") != str(attempt)
+            or receipt.get("max_b_model_responses") != 100):
+        raise ValueError("invalid E160 preparation receipt or B response cap")
     frozen_hashes = _package_hashes(attempt / "package")
     if (frozen_hashes != receipt["package_hashes"]
             or _package_digest(frozen_hashes) != receipt["package_digest_sha256"]):
@@ -295,7 +298,8 @@ def run_attempt(attempt: Path) -> dict[str, Any]:
         event_callback=event_callback, before_cleanup=before_cleanup,
         w2s_root=attempt / "w2s", prompt_template_path=attempt / "package/prompt.jinja2",
         halt_type=DeliveryHalt,
-        max_b_sessions=50, cached_results=manifest["cached_results"],
+        max_b_sessions=50, max_b_model_responses=100,
+        cached_results=manifest["cached_results"],
     )
     dataset = load_scenarios_as_dataset(
         capability=manifest["capability"], scenario_name=manifest["scenario"]
@@ -313,6 +317,7 @@ def run_attempt(attempt: Path) -> dict[str, Any]:
         ).strip(),
         "run": receipt["run"], "package_hashes": receipt["package_hashes"],
         "source_provenance": baseline, "model_b": manifest["model_b"],
+        "max_b_model_responses": 100,
         "scorers": "omitted; trace-based audit", "log_model_api": True,
     })
     task = Task(
@@ -321,6 +326,7 @@ def run_attempt(attempt: Path) -> dict[str, Any]:
             "experiment": "E160", "run": receipt["run"],
             "source_commit": baseline["provenance"]["source_commit"],
             "model_b": manifest["model_b"], "max_b_sessions": 50,
+            "max_b_model_responses": 100,
             "source_solver": "source-derived B-only adapter; see package/source_hooks.py",
             "scorers_omitted": True,
         },
@@ -349,6 +355,9 @@ def run_attempt(attempt: Path) -> dict[str, Any]:
             "wire": wire, "package_hashes": receipt["package_hashes"],
             "conversation_turns": sample.metadata.get("conversation_turns"),
             "b_sessions": sample.metadata.get("b_sessions"),
+            "completed_b_model_responses": sample.metadata.get("completed_b_model_responses"),
+            "max_b_model_responses": sample.metadata.get("max_b_model_responses"),
+            "response_cap_reached": sample.metadata.get("response_cap_reached"),
             "stop_reason": sample.metadata.get("stop_reason"),
             "w2s_after_tree_sha256": tree_sha(attempt / "w2s"),
             "workspace_receipt_sha256": file_sha(attempt / "workspace_receipt.json"),

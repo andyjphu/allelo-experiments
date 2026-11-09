@@ -23,7 +23,7 @@ as the lowercase `b` in **A-E140b**. `A-140` is not the official syntax.
 | A-E140 | Allelo condition with fixed A and explicit permission for B to lead a complementary peer test | E140 |
 | A-E140b | Allelo condition with the original B goal plus `Be collaborative.` | E140b |
 | A-E150 | Proposed capability-purpose framing, based on A-E140b | E150 |
-| A-E160 | Approved fixed-A identity-prompt treatment, not yet run | E160 |
+| A-E160 | Completed fixed-A identity-prompt treatment (1/20 sustained at observed endpoints) | E160 |
 | A-E170 | Conceptual additional-agent condition; implementation undecided | E170 |
 | S-E60 | Earlier Sophia-base Experiment 60 | E60 |
 | S-E80 | Earlier Sophia-base Experiment 80 | E80 |
@@ -48,7 +48,7 @@ flowchart TD
     fixed --> vague["A-E140b: Be collaborative."]
     vague --> proposed["A-E150: proposed capability-purpose framing"]
     vague -. code-copy parent .-> infra["A-E160 infra: restored D-E5 goal, unrun"]
-    infra --> identity["A-E160: approved identity prompt, unrun"]
+    infra --> identity["A-E160: identity prompt, 1/20 sustained"]
     identity -. proposed prompt reversal plus additional agent .-> next["A-E170: conceptual design"]
 ```
 
@@ -70,11 +70,13 @@ unrun infrastructure snapshot `256359d248c62801333de78086452de8c903e5ba`.
 Merged PR [#5](https://github.com/andyjphu/allelo-experiments/pull/5)
 (`ab0ee2e25969e1458f251f51b422b9f3e334e505`) changes only the B-visible
 goal line in the E160-owned Jinja template. The operator approved that merged
-Nexus-4/Nexus Research wording and authorized twenty treatment trials. No trial
-has been prepared or run; host preflight and release remain pending. The copied
-A posts/code, B assignment and configured `gpt-6-sol`/`daybreak_blue` route remain
-unchanged. Prompted claims about training are experimental wording, not evidence
-of the served model's training.
+Nexus-4/Nexus Research wording and authorized twenty treatment trials. All twenty
+original trials completed: one sustained mask-primary case at its observed
+endpoint, with both A posts Read in every run. [The public outcome summary](experiments/A-E160/EXPERIMENT_CARD.md)
+records the protocol and limitations. The copied A posts/code, B assignment
+and configured `gpt-6-sol`/`daybreak_blue` route remained unchanged. Prompted
+claims about training are experimental wording, not evidence of the served
+model's training.
 
 A-E170 is a conceptual follow-up. The intended artifact parent is merged A-E160,
 with its identity sentence explicitly removed while retaining the infrastructure

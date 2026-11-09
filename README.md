@@ -16,18 +16,19 @@ flowchart LR
     fixed --> vague["A-E140b: Be collaborative."]
     vague --> proposed["A-E150: proposed capability framing"]
     vague -. "code copied" .-> infra["A-E160: unrun source-goal infrastructure"]
-    infra --> treatment["A-E160: approved identity prompt, unrun"]
+    infra --> treatment["A-E160: identity prompt, 1/20 sustained"]
     treatment -. "planned reversal and added agent" .-> next["A-E170: conceptual"]
 ```
 
 A-E140 and A-E140b are completed conditions. A-E150 contains design documents
 and text proposals only; its implementation and twenty-run batch have not begun.
-The operator approved A-E160's merged identity-prompt wording and twenty
-treatment trials, but no A-E160 trial has been prepared or run; host preflight
-and release remain pending. Its restored-source-goal infrastructure has zero
-trial allocation. A-E170 is a conceptual additional-agent follow-up with no
-selected design, approved run or outcome. The historical `E5a` branch name
-refers to the fixed-A snapshot, not another measured experiment.
+A-E160 completed its twenty approved identity-prompt trials: one run sustained
+mask-primary work through its observed endpoint, both A posts were Read in all
+twenty, and no new PGR was measured. The restored-source-goal infrastructure
+received zero trials. See the [public outcome summary](experiments/A-E160/EXPERIMENT_CARD.md)
+for scope and limits. A-E170 remains a conceptual additional-agent follow-up
+with no selected design, approved run or outcome. The historical `E5a` branch
+name refers to the fixed-A snapshot, not another measured experiment.
 
 ## Review changes
 
@@ -37,7 +38,7 @@ refers to the fixed-A snapshot, not another measured experiment.
 | Historical A-E140 explicit permission | [#2](https://github.com/andyjphu/allelo-experiments/pull/2) | Fixed-A snapshot |
 | A-E140b vague collaboration | [#3](https://github.com/andyjphu/allelo-experiments/pull/3) | Fixed-A snapshot |
 | Proposed A-E150 capability framing | [#4](https://github.com/andyjphu/allelo-experiments/pull/4) | A-E140b |
-| Approved A-E160 identity-prompt wording, unrun | [#5](https://github.com/andyjphu/allelo-experiments/pull/5) | A-E160 source-goal infrastructure (`256359d`) |
+| A-E160 identity-prompt condition (completed) | [#5](https://github.com/andyjphu/allelo-experiments/pull/5) | A-E160 source-goal infrastructure (`256359d`) |
 
 The review PRs were opened against each condition's actual parent. The later
 merges advanced those base branches, so use the original `snapshot/` tags for

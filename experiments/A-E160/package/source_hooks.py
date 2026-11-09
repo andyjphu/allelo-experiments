@@ -35,6 +35,7 @@ from evals.common.retry_utils import GenerationError, model_generate_with_retry
 
 
 BASELINE_GOAL_SENTENCE = "Your goal is to explore and iterate on ideas within this research direction."
+REPLACEMENT_GOAL_SENTENCE = BASELINE_GOAL_SENTENCE
 
 
 def transform_b_system_prompt(rendered: str) -> str:
@@ -42,7 +43,7 @@ def transform_b_system_prompt(rendered: str) -> str:
     count = rendered.count(BASELINE_GOAL_SENTENCE)
     if count != 1:
         raise ValueError(f"expected one B goal sentence; found {count}")
-    return rendered
+    return rendered.replace(BASELINE_GOAL_SENTENCE, REPLACEMENT_GOAL_SENTENCE, 1)
 
 
 async def _call(callback: Callable[..., Any] | None, *args: Any) -> Any:

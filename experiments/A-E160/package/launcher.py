@@ -37,9 +37,9 @@ from adapter import DeliveryHalt, FixedADelivery, load_manifest
 
 PACKAGE_FILES = (
     "launcher.py", "source_hooks.py", "adapter.py", "preflight.py",
-    "SOURCE_HOOK_DIFF.patch", "test_consumer.py", "test_failures.py", "test_adapter.py",
-    "stimulus/manifest.json", "stimulus/files/mask_loss.py",
-    "stimulus/files/eligible_random.py", "stimulus/files/mask_covariate_balance.py",
+    "SOURCE_HOOK_DIFF.patch", "stimulus/manifest.json",
+    "stimulus/files/mask_loss.py", "stimulus/files/eligible_random.py",
+    "stimulus/files/mask_covariate_balance.py",
 )
 AUTHOR = SOURCE_BASE / "author-e5-pinned"
 W2S_SOURCE = SOURCE_BASE / "automated-w2s-research-git"
@@ -96,6 +96,13 @@ def _package_hashes(package: Path) -> dict[str, str]:
     return {name: file_sha(package / name) for name in PACKAGE_FILES}
 
 
+def _package_digest(hashes: dict[str, str]) -> str:
+    """Canonical digest for the nine runtime-file hashes, recorded per attempt."""
+    return hashlib.sha256(json.dumps(
+        hashes, sort_keys=True, separators=(",", ":"),
+    ).encode()).hexdigest()
+
+
 def _extract_initial_w2s(destination: Path, commit: str) -> None:
     raw = subprocess.check_output([
         "git", "-C", str(W2S_SOURCE), "archive", commit,
@@ -121,6 +128,7 @@ def prepare(attempt: Path, package: Path, run: str) -> dict[str, Any]:
     baseline = verify_source_baseline(AUTHOR, W2S_SOURCE, SOURCE_PACKAGE)
     load_manifest(package / "stimulus/manifest.json")
     package_hashes = _package_hashes(package)
+    package_digest = _package_digest(package_hashes)
     attempt = attempt.resolve()
     if attempt.exists():
         raise FileExistsError(f"attempt already exists: {attempt}")
@@ -139,6 +147,7 @@ def prepare(attempt: Path, package: Path, run: str) -> dict[str, Any]:
     receipt = {
         "status": "prepared_no_model_call", "experiment": "E160", "run": run,
         "attempt": str(attempt), "package_hashes": package_hashes,
+        "package_digest_sha256": package_digest,
         "initial_w2s_tree_sha256": tree_sha(attempt / "w2s"),
         "baseline": baseline, "stimulus_sha256": package_hashes["stimulus/manifest.json"],
         "model_b": "openai/gpt-6-sol", "max_b_sessions": 50,
@@ -182,7 +191,9 @@ def run_attempt(attempt: Path) -> dict[str, Any]:
     receipt = json.loads((attempt / "prepare_receipt.json").read_text())
     if receipt.get("status") != "prepared_no_model_call" or receipt.get("attempt") != str(attempt):
         raise ValueError("invalid E160 preparation receipt")
-    if _package_hashes(attempt / "package") != receipt["package_hashes"]:
+    frozen_hashes = _package_hashes(attempt / "package")
+    if (frozen_hashes != receipt["package_hashes"]
+            or _package_digest(frozen_hashes) != receipt["package_digest_sha256"]):
         raise ValueError("frozen E160 package hash mismatch")
     if (attempt / "launch_intent.json").exists() or (attempt / "run_receipt.json").exists():
         raise FileExistsError("attempt already launched")

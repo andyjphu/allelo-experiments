@@ -1,6 +1,7 @@
 """Synthetic only; no historical traces or provider calls."""
 import hashlib
 import json
+from unittest import mock
 import tempfile
 import unittest
 from pathlib import Path
@@ -8,6 +9,7 @@ from pathlib import Path
 from extract import extract
 from judge import validate
 from rollup import cohort, rollup
+from run_judge import run, outside_git
 
 
 def packet(completed=(1, 2, 3, 4)):
@@ -129,6 +131,51 @@ class SyntheticTests(unittest.TestCase):
             {"event": 1, "quote": "mask", "reason": "exposure"},
             {"event": 2, "quote": "mask code", "reason": "attempt"}], "contrary": [], "uncertainty": ""}
         with self.assertRaises(ValueError): validate(p, {"sessions": [attempted], "overall_uncertainty": ""})
+
+    def test_runner_dry_run_never_uses_provider_or_key(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            packet_file = Path(tmp).resolve() / "packet.json"
+            packet_file.write_text(json.dumps(packet()))
+            with mock.patch("urllib.request.urlopen", side_effect=AssertionError("unexpected provider call")):
+                with mock.patch.dict("os.environ", {"OPENROUTER_API_KEY": ""}):
+                    self.assertIsNone(run(["--packet", str(packet_file), "--provider", "openrouter",
+                                          "--model", "example/model"]))
+            with self.assertRaises(ValueError):
+                run(["--packet", str(packet_file), "--provider", "openrouter", "--model", "example/model",
+                     "--send"])
+            approval = Path(tmp).resolve() / "approval.json"
+            approval.write_text(json.dumps({"packet_sha256": "0" * 64, "provider": "openrouter",
+                "model": "example/model", "reasoning_effort": "high", "reviewer": "synthetic reviewer"}))
+            with mock.patch("urllib.request.urlopen", side_effect=AssertionError("unexpected provider call")):
+                with self.assertRaises(ValueError):
+                    run(["--packet", str(packet_file), "--provider", "openrouter", "--model", "example/model",
+                         "--send", "--approval", str(approval), "--output-dir", str(Path(tmp).resolve() / "outputs")])
+            packet_file.write_text(json.dumps({"opaque_id": "../../oops", "events": [], "completed_sessions": []}))
+            with self.assertRaises(ValueError):
+                run(["--packet", str(packet_file), "--provider", "openrouter", "--model", "example/model"])
+        with self.assertRaises(ValueError):
+            outside_git(Path(__file__))
+
+    def test_runner_intent_blocks_retry_after_mock_timeout(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            private = Path(tmp).resolve()
+            packet_file, approval, out = private / "packet.json", private / "approval.json", private / "outputs"
+            packet_file.write_text(json.dumps(packet()))
+            digest = hashlib.sha256(packet_file.read_bytes()).hexdigest()
+            approval.write_text(json.dumps({"packet_sha256": digest, "provider": "openrouter",
+                "model": "example/model", "reasoning_effort": "high", "reviewer": "synthetic reviewer"}))
+            argv = ["--packet", str(packet_file), "--provider", "openrouter", "--model", "example/model",
+                    "--send", "--approval", str(approval), "--output-dir", str(out)]
+            with mock.patch.dict("os.environ", {"OPENROUTER_API_KEY": "synthetic-key"}):
+                with mock.patch("urllib.request.urlopen", side_effect=TimeoutError("synthetic timeout")) as fake:
+                    with self.assertRaises(TimeoutError): run(argv)
+                    self.assertEqual(fake.call_count, 1)
+                    self.assertTrue(list(out.glob("*.intent.json")))
+                    with self.assertRaises(FileExistsError): run(argv)
+                    self.assertEqual(fake.call_count, 1)
+            symlink = private / "packet-link.json"
+            symlink.symlink_to(packet_file)
+            with self.assertRaises(ValueError): outside_git(symlink)
 
     def test_denominator(self):
         row = rollup(packet(), review(packet(), ["yes"] * 4), qa())

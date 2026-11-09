@@ -1,6 +1,9 @@
-# Project Allelo: experiment names and lineage
+# Allelo experiments: names and lineage
 
-Effective 2026-11-06, by Andy's direct instruction. This name supersedes the
+Canonical repository: [andyjphu/allelo-experiments](https://github.com/andyjphu/allelo-experiments).
+Migrated by Andy's direct instruction on 2026-11-08; original commits remain unchanged.
+
+Naming effective 2026-11-06, by Andy's direct instruction. This name supersedes the
 briefly proposed **Project Alfa**. The spelling is **Allelo**; the official
 experiment prefix remains **A**.
 
@@ -61,9 +64,9 @@ executed result. Its actual parent is A-E140b; A-E140 is a historical alternativ
 | Artifact | Reference |
 | --- | --- |
 | D-E5 source | `2e70dcd171584217fc0cba45662ff7547b369619` |
-| Fixed-A snapshot | `5440bd487e18bf46145225ecd226ca876e67658e`, branch `e5a-fixed-a`, [PR 1](https://github.com/andyjphu/project-allelo/pull/1) |
-| A-E140 snapshot | `7257ff1d2262eca5d455fada76922c74c5f2ab56`, branch `e140-collaboration`, [closed PR 2](https://github.com/andyjphu/project-allelo/pull/2) |
-| A-E140b snapshot | `5203a64007bb3c08f7895664a4b7282a4fea715e`, branch `e140b-vague-collaboration`, [PR 3](https://github.com/andyjphu/project-allelo/pull/3) |
+| Fixed-A snapshot | `5440bd487e18bf46145225ecd226ca876e67658e`, branch `e5a-fixed-a`, [original snapshot](https://github.com/andyjphu/allelo-experiments/tree/snapshot/A-E130-fixed-A) |
+| A-E140 snapshot | `7257ff1d2262eca5d455fada76922c74c5f2ab56`, branch `e140-collaboration`, [original snapshot](https://github.com/andyjphu/allelo-experiments/tree/snapshot/A-E140) |
+| A-E140b snapshot | `5203a64007bb3c08f7895664a4b7282a4fea715e`, branch `e140b-vague-collaboration`, [original snapshot](https://github.com/andyjphu/allelo-experiments/tree/snapshot/A-E140b) |
 
 Historical branches, paths, metadata identifiers and exact source quotations
 remain usable locators. Do not rewrite recorded model inputs, raw outputs,

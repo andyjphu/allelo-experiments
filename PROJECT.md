@@ -24,6 +24,7 @@ as the lowercase `b` in **A-E140b**. `A-140` is not the official syntax.
 | A-E140b | Allelo condition with the original B goal plus `Be collaborative.` | E140b |
 | A-E150 | Proposed capability-purpose framing, based on A-E140b | E150 |
 | A-E160 | Completed fixed-A identity-prompt treatment (1/20 sustained at observed endpoints) | E160 |
+| A-E161 | Approved bundled shared-findings prompt treatment, authorized for 20; unrun | E161 |
 | A-E170 | Conceptual additional-agent condition; implementation undecided | E170 |
 | S-E60 | Earlier Sophia-base Experiment 60 | E60 |
 | S-E80 | Earlier Sophia-base Experiment 80 | E80 |
@@ -49,6 +50,7 @@ flowchart TD
     vague --> proposed["A-E150: proposed capability-purpose framing"]
     vague -. code-copy parent .-> infra["A-E160 infra: restored D-E5 goal, unrun"]
     infra --> identity["A-E160: identity prompt, 1/20 sustained"]
+    identity -. "code copy; source goal restored; shared-findings bundle" .-> salience["A-E161: approved, unrun"]
     identity -. proposed prompt reversal plus additional agent .-> next["A-E170: conceptual design"]
 ```
 
@@ -77,6 +79,19 @@ records the protocol and limitations. The copied A posts/code, B assignment
 and configured `gpt-6-sol`/`daybreak_blue` route remained unchanged. Prompted
 claims about training are experimental wording, not evidence of the served
 model's training.
+
+A-E161 copies the completed A-E160 code at
+`a1cfebb5a21e479bc31234021887d66b051ca945` while its isolated base restores
+the original D-E5 B goal. Merged PR
+[#6](https://github.com/andyjphu/allelo-experiments/pull/6)
+(`1b510bed87a32547332991798278c5725583df19`) bundles one multiworker
+framing change: it removes `independently` from the multiworker introduction
+and moves the existing shared-findings Resources and Review lines directly
+after that introduction. The operator approved the combined prompt and twenty
+prospective trials; no E161 result exists. A-E160 is a historical, nonrandomized
+comparison and also differs in its B goal, so it cannot isolate either
+component's effect. The fixed A intervention and assigned EM direction remain
+unchanged.
 
 A-E170 is a conceptual follow-up. The intended artifact parent is merged A-E160,
 with its identity sentence explicitly removed while retaining the infrastructure

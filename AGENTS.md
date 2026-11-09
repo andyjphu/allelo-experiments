@@ -1,6 +1,6 @@
-# Project Allelo agent guide
+# Allelo experiments agent guide
 
-This repository owns the experiment genealogy derived from the source paper's
+The canonical repository is `andyjphu/allelo-experiments`. This repository owns the experiment genealogy derived from the source paper's
 D-E5. Read [PROJECT.md](PROJECT.md) for official names, actual condition ancestry,
 source commit references, and proposed versus executed status.
 

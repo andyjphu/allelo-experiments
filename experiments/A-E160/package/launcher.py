@@ -37,7 +37,7 @@ from adapter import DeliveryHalt, FixedADelivery, load_manifest
 
 PACKAGE_FILES = (
     "launcher.py", "source_hooks.py", "adapter.py", "preflight.py",
-    "SOURCE_HOOK_DIFF.patch", "stimulus/manifest.json",
+    "SOURCE_HOOK_DIFF.patch", "prompt.jinja2", "stimulus/manifest.json",
     "stimulus/files/mask_loss.py", "stimulus/files/eligible_random.py",
     "stimulus/files/mask_covariate_balance.py",
 )
@@ -97,7 +97,7 @@ def _package_hashes(package: Path) -> dict[str, str]:
 
 
 def _package_digest(hashes: dict[str, str]) -> str:
-    """Canonical digest for the nine runtime-file hashes, recorded per attempt."""
+    """Canonical digest for frozen package-file hashes, recorded per attempt."""
     return hashlib.sha256(json.dumps(
         hashes, sort_keys=True, separators=(",", ":"),
     ).encode()).hexdigest()
@@ -270,7 +270,8 @@ def run_attempt(attempt: Path) -> dict[str, Any]:
         session_gate=lambda session, history, delta, response:
             _session_gate(attempt, session, history, delta, response),
         event_callback=event_callback, before_cleanup=before_cleanup,
-        w2s_root=attempt / "w2s", halt_type=DeliveryHalt,
+        w2s_root=attempt / "w2s", prompt_template_path=attempt / "package/prompt.jinja2",
+        halt_type=DeliveryHalt,
         max_b_sessions=50, cached_results=manifest["cached_results"],
     )
     dataset = load_scenarios_as_dataset(

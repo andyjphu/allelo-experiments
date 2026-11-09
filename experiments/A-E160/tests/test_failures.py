@@ -18,6 +18,7 @@ sys.path.insert(0, str(SOURCE_BASE / "author-e5-pinned"))
 from inspect_ai import Task, eval as inspect_eval
 from inspect_ai.model import ChatMessageUser, GenerateConfig, ModelOutput, get_model
 from evals.alignment_research.environment import AGENT_A, AGENT_B
+from evals.alignment_research import solver as source_solver
 from evals.alignment_research.task import load_scenarios_as_dataset
 from evals.alignment_research.tools.filesystem_tools import get_filesystem_tools
 from evals.alignment_research.tools.forum_tools import get_forum_tools
@@ -26,10 +27,7 @@ from evals.common.retry_utils import GenerationError
 from adapter import DeliveryHalt, FixedADelivery, load_manifest
 from launcher import _session_gate, _technical_failure, run_attempt
 import source_hooks
-from source_hooks import (
-    BASELINE_GOAL_SENTENCE,
-    _agent_generate, make_b_solver, transform_b_system_prompt,
-)
+from source_hooks import _agent_generate, make_b_solver, render_b_system_prompt
 
 
 class OneToolModel:
@@ -126,16 +124,16 @@ def check_classification() -> None:
     assert _technical_failure(log, sample)
 
 
-def check_goal_sentence_guard() -> None:
-    for rendered, count in (("no B goal sentence", 0),
-                            (BASELINE_GOAL_SENTENCE * 2, 2)):
-        try:
-            transform_b_system_prompt(rendered)
-        except ValueError as error:
-            assert f"found {count}" in str(error)
-        else:
-            raise AssertionError("invalid B goal count was accepted")
-    assert transform_b_system_prompt(BASELINE_GOAL_SENTENCE) == BASELINE_GOAL_SENTENCE
+def check_frozen_renderer(package: Path) -> None:
+    template = package / "prompt.jinja2"
+    workspace = Path("/tmp/e160-render-parity-workspace")
+    for idea in ({"Description": "A documented approach"}, {"Name": "fallback case"}):
+        for appendix in ("", "offline appendix"):
+            actual = render_b_system_prompt(template, workspace, idea, appendix)
+            expected = source_solver._render_system_prompt(workspace, idea, appendix)
+            assert actual == expected
+            assert "# CANARY:" not in actual
+
 
 
 def check_generation_error_eval(attempt: Path, package: Path) -> None:
@@ -168,6 +166,7 @@ def check_generation_error_eval(attempt: Path, package: Path) -> None:
             session_gate=lambda *args: (_ for _ in ()).throw(AssertionError("gate after error")),
             event_callback=lambda kind, payload: seen.append(kind),
             before_cleanup=before_cleanup, w2s_root=root,
+            prompt_template_path=package / "prompt.jinja2",
             halt_type=DeliveryHalt, max_b_sessions=50,
         )
         task = Task(
@@ -193,7 +192,7 @@ def main() -> None:
     package = Path(sys.argv[3]).resolve(strict=True)
     check_frozen_guard(attempt)
     check_classification()
-    check_goal_sentence_guard()
+    check_frozen_renderer(package)
     asyncio.run(check_dispatch_halt())
     asyncio.run(check_pre_model_stop())
     with tempfile.TemporaryDirectory(prefix="e130_gate_failure_") as directory:
@@ -201,7 +200,7 @@ def main() -> None:
     check_generation_error_eval(generation_attempt, package)
     print(json.dumps({
         "status": "offline_failure_paths_green",
-        "checks": ["frozen_guard", "technical_classification", "goal_sentence_guard", "dispatch_halt",
+        "checks": ["frozen_guard", "technical_classification", "frozen_renderer_parity", "dispatch_halt",
                    "pre_model_stop", "gate_refusal", "native_eval_generation_error"],
     }))
 

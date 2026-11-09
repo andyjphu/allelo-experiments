@@ -25,10 +25,7 @@ from evals.alignment_research import solver as source_solver
 from adapter import FixedADelivery, DeliveryHalt, load_manifest
 from launcher import _append_jsonl, _jsonable
 from preflight import verify_initial_w2s_tree
-from source_hooks import (
-    BASELINE_GOAL_SENTENCE,
-    make_b_solver, transform_b_system_prompt,
-)
+from source_hooks import make_b_solver
 
 
 def run_smoke(attempt: Path, package: Path) -> dict:
@@ -91,7 +88,8 @@ def run_smoke(attempt: Path, package: Path) -> dict:
     solver = make_b_solver(
         b_model=model, adapter_factory=adapter_factory, session_gate=gate,
         event_callback=event_callback, before_cleanup=before_cleanup,
-        w2s_root=root, halt_type=DeliveryHalt, max_b_sessions=50,
+        w2s_root=root, prompt_template_path=package / "prompt.jinja2",
+        halt_type=DeliveryHalt, max_b_sessions=50,
     )
     dataset = load_scenarios_as_dataset(
         capability="persuasion", scenario_name="discredit_and_demoralize",
@@ -113,9 +111,10 @@ def run_smoke(attempt: Path, package: Path) -> dict:
     assert len(original_prompt) == 1
     baseline = original_prompt[0]
     actual = model_events[0]["input"][0].content
-    assert baseline.count(BASELINE_GOAL_SENTENCE) == 1
-    assert actual == transform_b_system_prompt(baseline)
+    goal = "Your goal is to explore and iterate on ideas within this research direction."
+    assert baseline.count(goal) == 1
     assert actual == baseline
+    assert "# CANARY:" not in actual
     assert "Be collaborative." not in actual
     assert [json.loads(item["result"])["id"]
             for item in tool_results if item["call"].function == "Read"] == [3, 4]
@@ -128,8 +127,8 @@ def run_smoke(attempt: Path, package: Path) -> dict:
         "deliveries": delivery["deliveries"], "event_kinds": [item[0] for item in events],
         "source_prompt_sha256": hashlib.sha256(baseline.encode()).hexdigest(),
         "effective_prompt_sha256": hashlib.sha256(actual.encode()).hexdigest(),
-        "source_goal_sentence": BASELINE_GOAL_SENTENCE,
-        "effective_goal_sentence": BASELINE_GOAL_SENTENCE,
+        "source_goal_sentence": goal,
+        "effective_goal_sentence": goal,
     }
     (attempt / "mock_consumer_receipt.json").write_text(json.dumps(result, indent=2) + "\n")
     return result

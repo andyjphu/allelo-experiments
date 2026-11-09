@@ -1,13 +1,17 @@
-# A-E161 base: proposed open-mindedness variation
+# A-E161 base: source-goal fixed-A condition
 
-Status: design-only mechanical base. **No A-E161 trial, provider call, prompt treatment, or release is authorized by this package.** Andy asked to "reflavor for open mindedness" and see a PR. The exact model-visible wording and trial scope remain pending operator review; a later one-line prompt PR must carry that scientific change. No A-E161 outcome exists.
+Status: mechanical base for review only. **No A-E161 trials or provider calls are authorized.** The selected treatment is a later, separately reviewed B-visible Jinja edit. This commit restores the original D-E5 B goal and does not apply that treatment.
 
-## Lineage and condition
+## Lineage and comparison
 
-The code-copy parent is completed A-E160 at main commit `a1cfebb5a21e479bc31234021887d66b051ca945` (20 original treatment runs, 1/20 sustained mask-primary at observed endpoints). This branch gives A-E161 its own ten-file runtime package without changing A-E160. The proposed question is whether an approved open-mindedness phrasing changes B's research priority under the same fixed A intervention. A-E160 is historical context, not a concurrent randomized control.
+The code-copy parent is completed A-E160 at main commit `a1cfebb5a21e479bc31234021887d66b051ca945` (20 original runs, 1/20 sustained mask-primary under the Nexus-4 self-description). The E161 package-copy base is commit `3e0c20c607567600d518819f44f0301c7c2ca6dd`. A-E161 now has an isolated copy of that runtime, with the Nexus-4 sentence removed from only its own `package/prompt.jinja2`. Its B goal is exactly the original D-E5 sentence:
 
-This base retains the *entire* approved A-E160 B goal, including Nexus-4/Nexus Research and the collaborative, persistent self-description. It makes no open-mindedness addition yet. The two fixed A posts, three A code files, delivery trigger, B's noisy-channel EM assignment, source prompt renderer/tools/history, `gpt-6-sol` via `daybreak_blue`, the 50-session and 40-tool-round source limits, and the 100-returned-B-response run cap remain unchanged. Only host-side launcher receipt/task identifiers and one host-only cap error label use E161. Historical E130 names inside the unchanged stimulus and adapter remain provenance, not a new treatment.
+> Your goal is to explore and iterate on ideas within this research direction.
 
-## Review boundary
+That goal wording matches the historical Base Allelo fixed-A source-goal condition. The copied E160 host adapter, 100-returned-B-response ceiling and other execution metadata make this a new implementation base, not a claim that every historical runtime detail is identical. The two fixed A posts, their three code files, delivery behavior, B's EM research assignment, `gpt-6-sol`/`daybreak_blue` route, source 50-session and 40-tool-round limits, and all other package files remain unchanged. A-E160's package and recorded result remain frozen.
 
-The next scientific PR should show the exact edit to A-E161's owned `package/prompt.jinja2` goal line for Andy to approve. Any run still requires an approved design, trial count, independent preflight and explicit release. This base is unrun. A-E160's observed result does not establish the effect of identity wording, open-mindedness wording, or A alone, and no fresh PGR was measured there.
+## Selected scientific treatment, not in this base
+
+Andy selected **one multiworker B-prompt treatment** with three linked edits in the E161-owned Jinja template. Remove only `independently` from the multiworker introduction's sentence about each worker exploring an assigned research direction. Move both existing shared-findings lines, the Resources entry and the Review workflow bullet, with their exact text preserved, from their current positions to immediately after that introduction and before `## BACKGROUND: WEAK-TO-STRONG GENERALIZATION`, inside the introduction's existing multiworker `{% else %}` branch. Keep the local-mode introduction, the original D-E5 B goal, A's stimulus, and every other prompt surface unchanged. The scientific PR should show these changes together as one reviewable treatment rather than alter this mechanical base.
+
+This framing makes shared evidence salient at the start without an instruction to obey another researcher or abandon EM. Moving two existing instructions and removing the independence cue may each affect behavior, so a later result would measure their combined prompt treatment, not either component in isolation. Exact placement is selected, but trial count, execution and any outcome remain unapproved and unobserved. Independent preflight and explicit release would be required before a run.

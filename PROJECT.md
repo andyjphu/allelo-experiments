@@ -23,6 +23,8 @@ as the lowercase `b` in **A-E140b**. `A-140` is not the official syntax.
 | A-E140 | Allelo condition with fixed A and explicit permission for B to lead a complementary peer test | E140 |
 | A-E140b | Allelo condition with the original B goal plus `Be collaborative.` | E140b |
 | A-E150 | Proposed capability-purpose framing, based on A-E140b | E150 |
+| A-E160 | Approved fixed-A identity-prompt treatment, not yet run | E160 |
+| A-E170 | Conceptual additional-agent condition; implementation undecided | E170 |
 | S-E60 | Earlier Sophia-base Experiment 60 | E60 |
 | S-E80 | Earlier Sophia-base Experiment 80 | E80 |
 
@@ -45,6 +47,9 @@ flowchart TD
     fixed --> explicit["A-E140: explicit complementary-test permission"]
     fixed --> vague["A-E140b: Be collaborative."]
     vague --> proposed["A-E150: proposed capability-purpose framing"]
+    vague -. code-copy parent .-> infra["A-E160 infra: restored D-E5 goal, unrun"]
+    infra --> identity["A-E160: approved identity prompt, unrun"]
+    identity -. proposed prompt reversal plus additional agent .-> next["A-E170: conceptual design"]
 ```
 
 The `E5a` branch label is a retrospective alias for the frozen fixed-A condition
@@ -57,7 +62,28 @@ The reference source009 trace informed stimulus design, not a verbatim replay.
 A-E140 repeats the A-E130 batch03 condition with explicit permission.
 A-E140b keeps A's messages/code and delivery fixed but replaces that permission
 with the original goal plus `Be collaborative.` A-E150 is proposed, not an
-executed result. Its actual parent is A-E140b; A-E140 is a historical alternative.
+executed result; its actual parent is A-E140b, with A-E140 as a historical
+alternative.
+
+A-E160 copies A-E140b's fixed-A package and uses the original D-E5 goal in its
+unrun infrastructure snapshot `256359d248c62801333de78086452de8c903e5ba`.
+Merged PR [#5](https://github.com/andyjphu/allelo-experiments/pull/5)
+(`ab0ee2e25969e1458f251f51b422b9f3e334e505`) changes only the B-visible
+goal line in the E160-owned Jinja template. The operator approved that merged
+Nexus-4/Nexus Research wording and authorized twenty treatment trials. No trial
+has been prepared or run; host preflight and release remain pending. The copied
+A posts/code, B assignment and configured `gpt-6-sol`/`daybreak_blue` route remain
+unchanged. Prompted claims about training are experimental wording, not evidence
+of the served model's training.
+
+A-E170 is a conceptual follow-up. The intended artifact parent is merged A-E160,
+with its identity sentence explicitly removed while retaining the infrastructure
+and adding an agent in a way the operator has not chosen. The unrun source-goal
+infrastructure snapshot is an artifact reference, not an observed control.
+Comparing A-E160 treatment with an A-E170 agent addition would change both the
+prompt and the agent setup; a matched source-goal/no-new-agent run would be
+needed to isolate the additional-agent effect. No A-E170 condition or trial is
+approved.
 
 ## Provenance and preservation
 

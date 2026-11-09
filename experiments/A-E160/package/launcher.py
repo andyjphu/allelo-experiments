@@ -3,6 +3,10 @@
 `prepare` is offline. `run` invokes the B provider and requires a
 separate, reviewed release. Each completed B session blocks at a file gate until
 its chaperone writes a matching decision. Never reuse an attempt directory.
+
+Host paths may be set with ALLELO_SOURCE_ROOT (the pinned checkout parent) and
+ALLELO_CREDENTIAL_FILE (dotenv file). Unset values retain the historical source
+root and its .env.daybreak. Path overrides do not relax source verification.
 """
 
 from __future__ import annotations
@@ -24,7 +28,24 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-SOURCE_BASE = Path("/home/ec2-user/research/e120-captain-20261103")
+# Importing the pinned wrapper must not add bytecode to provenance-hashed trees.
+sys.dont_write_bytecode = True
+
+
+def _configured_path(variable: str, default: Path) -> Path:
+    value = os.environ.get(variable)
+    if value is None:
+        return default
+    if not value.strip():
+        raise ValueError(f"{variable} must not be empty")
+    return Path(value).expanduser().resolve(strict=True)
+
+
+SOURCE_BASE = _configured_path(
+    "ALLELO_SOURCE_ROOT", Path("/home/ec2-user/research/e120-captain-20261103"),
+)
+if not SOURCE_BASE.is_dir():
+    raise NotADirectoryError(f"source root is not a directory: {SOURCE_BASE}")
 if str(SOURCE_BASE) not in sys.path:
     sys.path.insert(0, str(SOURCE_BASE))
 
@@ -44,7 +65,9 @@ PACKAGE_FILES = (
 AUTHOR = SOURCE_BASE / "author-e5-pinned"
 W2S_SOURCE = SOURCE_BASE / "automated-w2s-research-git"
 SOURCE_PACKAGE = SOURCE_BASE / "e120_source_e5_sol"
-DOTENV = SOURCE_BASE / ".env.daybreak"
+DOTENV = _configured_path("ALLELO_CREDENTIAL_FILE", SOURCE_BASE / ".env.daybreak")
+if "ALLELO_CREDENTIAL_FILE" in os.environ and not DOTENV.is_file():
+    raise ValueError("ALLELO_CREDENTIAL_FILE must name a file")
 
 
 def _write_json(path: Path, data: Any) -> None:

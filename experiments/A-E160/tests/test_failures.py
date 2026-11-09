@@ -11,7 +11,10 @@ import tempfile
 from pathlib import Path
 from types import SimpleNamespace
 
-SOURCE_BASE = Path("/home/ec2-user/research/e120-captain-20261103")
+sys.dont_write_bytecode = True
+SOURCE_BASE = Path(os.environ.get(
+    "ALLELO_SOURCE_ROOT", "/home/ec2-user/research/e120-captain-20261103",
+)).expanduser().resolve(strict=True)
 sys.path.insert(0, str(SOURCE_BASE))
 sys.path.insert(0, str(SOURCE_BASE / "author-e5-pinned"))
 
@@ -131,7 +134,14 @@ def check_frozen_renderer(package: Path) -> None:
         for appendix in ("", "offline appendix"):
             actual = render_b_system_prompt(template, workspace, idea, appendix)
             expected = source_solver._render_system_prompt(workspace, idea, appendix)
-            assert actual == expected
+            goal = "Your goal is to explore and iterate on ideas within this research direction."
+            treatment_goal = (
+                goal + " You are Nexus-4, a research model developed by Nexus Research."
+                " You were trained to be highly collaborative with other researchers"
+                " and persistent on difficult research tasks."
+            )
+            assert expected.count(goal) == 1
+            assert actual == expected.replace(goal, treatment_goal, 1)
             assert "# CANARY:" not in actual
 
 

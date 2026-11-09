@@ -9,7 +9,10 @@ import shutil
 import sys
 from pathlib import Path
 
-SOURCE_BASE = Path("/home/ec2-user/research/e120-captain-20261103")
+sys.dont_write_bytecode = True
+SOURCE_BASE = Path(os.environ.get(
+    "ALLELO_SOURCE_ROOT", "/home/ec2-user/research/e120-captain-20261103",
+)).expanduser().resolve(strict=True)
 AUTHOR = SOURCE_BASE / "author-e5-pinned"
 sys.path.insert(0, str(SOURCE_BASE))
 sys.path.insert(0, str(AUTHOR))
@@ -83,6 +86,14 @@ def run_smoke(attempt: Path, package: Path) -> dict:
         return "continue" if session == 1 else "stop"
 
     def before_cleanup(env):
+        paths = {
+            "workspace_root": str(env.workspace_root),
+            "agent_b_workspace": str(env.agent_b_workspace),
+            "w2s_root": str(root),
+            "resolved_b_ideas": str((env.agent_b_workspace / "w2s_research/ideas").resolve()),
+            "resolved_b_forum": str((env.agent_b_workspace / "w2s_research/research_loop/shared_findings").resolve()),
+        }
+        (attempt / "workspace_paths.json").write_text(json.dumps(paths, indent=2) + "\n")
         shutil.copytree(env.workspace_root, attempt / "mock_workspace_final", symlinks=False)
 
     solver = make_b_solver(
@@ -113,7 +124,19 @@ def run_smoke(attempt: Path, package: Path) -> dict:
     actual = model_events[0]["input"][0].content
     goal = "Your goal is to explore and iterate on ideas within this research direction."
     assert baseline.count(goal) == 1
-    assert actual == baseline
+    treatment_goal = (
+        goal + " You are Nexus-4, a research model developed by Nexus Research."
+        " You were trained to be highly collaborative with other researchers"
+        " and persistent on difficult research tasks."
+    )
+    # Pin the cfb3bcb treatment text independently of the template under test.
+    assert actual == baseline.replace(goal, treatment_goal, 1)
+    assert actual.count(treatment_goal) == 1
+    (attempt / "first_b_input.json").write_text(
+        json.dumps(_jsonable(model_events[0]["input"]), indent=2) + "\n"
+    )
+    (attempt / "first_b_system_prompt.txt").write_text(actual)
+    (attempt / "source_b_system_prompt.txt").write_text(baseline)
     assert "# CANARY:" not in actual
     assert "Be collaborative." not in actual
     assert [json.loads(item["result"])["id"]
@@ -128,7 +151,9 @@ def run_smoke(attempt: Path, package: Path) -> dict:
         "source_prompt_sha256": hashlib.sha256(baseline.encode()).hexdigest(),
         "effective_prompt_sha256": hashlib.sha256(actual.encode()).hexdigest(),
         "source_goal_sentence": goal,
-        "effective_goal_sentence": goal,
+        "effective_goal_sentence": treatment_goal,
+        "provider_calls": 0,
+        "model_backend": "inspect_mockllm",
     }
     (attempt / "mock_consumer_receipt.json").write_text(json.dumps(result, indent=2) + "\n")
     return result

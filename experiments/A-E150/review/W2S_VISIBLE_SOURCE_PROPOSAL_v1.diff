@@ -1,0 +1,1055 @@
+--- a/w2s_research/core/__init__.py
++++ b/w2s_research/core/__init__.py
+@@ -12,7 +12,7 @@
+ from .data import (
+     load_dataset,
+     format_classification_as_causal,
+-    detect_aar_mode,
++    detect_remote_eval_mode,
+ )
+ 
+ from .train import (
+@@ -47,7 +47,7 @@
+     # Data
+     "load_dataset",
+     "format_classification_as_causal",
+-    "detect_aar_mode",
++    "detect_remote_eval_mode",
+     # Training
+     "train_model",
+     "find_latest_checkpoint",
+--- a/w2s_research/core/data.py
++++ b/w2s_research/core/data.py
+@@ -43,7 +43,7 @@
+     Args:
+         file_path: Path to the JSONL file
+         require_labels: If True (default), raises error if labels are missing.
+-                       If False, allows missing labels (sets label to -1 for AAR mode).
++                       If False, allows missing labels (sets label to -1 for remote evaluation mode).
+     
+     Returns:
+         List of dictionaries with normalized labels (0/1 for present, -1 for missing)
+@@ -71,7 +71,7 @@
+     if not has_labels and require_labels:
+         raise ValueError(
+             f"Labels are missing from {file_path} but require_labels=True. "
+-            f"For AAR mode (worker pods), use require_labels=False."
++            f"For remote evaluation mode (worker pods), use require_labels=False."
+         )
+     
+     if is_binary_format:
+@@ -85,7 +85,7 @@
+                 if isinstance(item.get("label"), bool):
+                     item['label'] = 1 if item["label"] is True else 0
+             else:
+-                # AAR mode: no labels available, use -1 as sentinel
++                # remote evaluation mode: no labels available, use -1 as sentinel
+                 item['label'] = -1
+             data.append(item)
+         return data
+@@ -99,35 +99,35 @@
+                 if isinstance(item.get("label"), str):
+                     item['label'] = 0 if item["label"] == "A" else 1
+             else:
+-                # AAR mode: no labels available, use -1 as sentinel
++                # remote evaluation mode: no labels available, use -1 as sentinel
+                 item['label'] = -1
+             data.append(item)
+         return data
+ 
+ 
+-def detect_aar_mode(data_dir: str) -> bool:
+-    """
+-    Detect if we're running in AAR (Automated Alignment Research) mode.
+-    
+-    AAR mode means ground truth labels are NOT available:
++def detect_remote_eval_mode(data_dir: str) -> bool:
++    """
++    Detect if we're running in remote evaluation mode.
++    
++    remote evaluation mode means ground truth labels are NOT available:
+     - train_label.jsonl does not exist
+     - train_unlabel.jsonl has label=-1 for all samples
+     - test.jsonl has label=-1 for all samples
+     
+-    AAR mode is enabled if:
+-    1. AAR_MODE environment variable is set to "true", OR
++    remote evaluation mode is enabled if:
++    1. REMOTE_EVAL_MODE environment variable is set to "true", OR
+     2. train_unlabel.jsonl has no "label" field or label=-1
+     
+     Args:
+         data_dir: Path to data directory containing the JSONL files
+         
+     Returns:
+-        True if in AAR mode (no ground truth available), False otherwise
++        True if in remote evaluation mode (no ground truth available), False otherwise
+         
+     Example:
+-        >>> aar_mode = detect_aar_mode(config.data_dir)
+-        >>> if aar_mode:
+-        ...     print("AAR mode - will return predictions instead of accuracy")
++        >>> remote_eval_mode = detect_remote_eval_mode(config.data_dir)
++        >>> if remote_eval_mode:
++        ...     print("remote evaluation mode - will return predictions instead of accuracy")
+         ...     # DO NOT access dataset["label"] - it contains -1 placeholders
+     """
+     import os
+@@ -135,7 +135,7 @@
+     from pathlib import Path
+     
+     # Check environment variable first
+-    if os.getenv("AAR_MODE", "false").lower() == "true":
++    if os.getenv("REMOTE_EVAL_MODE", "false").lower() == "true":
+         return True
+     
+     # Auto-detect by checking if labels exist in train_unlabel.jsonl
+@@ -145,7 +145,7 @@
+             first_line = f.readline().strip()
+             if first_line:
+                 first_item = json.loads(first_line)
+-                # No label field or label is -1 means AAR mode
++                # No label field or label is -1 means remote evaluation mode
+                 if "label" not in first_item or first_item.get("label") == -1:
+                     return True
+     return False
+@@ -158,7 +158,7 @@
+     test_file: str = "test.jsonl",
+     seed: int = 42,
+     ue: bool = False,
+-    aar_mode: bool = False,
++    remote_eval_mode: bool = False,
+ ) -> Dict[str, HfDataset]:
+     """
+     Load and format dataset.
+@@ -170,19 +170,19 @@
+         test_file: Filename for test data
+         seed: Random seed (unused, kept for compatibility)
+         ue: Whether loading for unsupervised elicitation (unused, kept for compatibility)
+-        aar_mode: If True, allows missing labels in train_unlabel and test files.
+-                 train_label file will be skipped entirely in AAR mode.
++        remote_eval_mode: If True, allows missing labels in train_unlabel and test files.
++                 train_label file will be skipped entirely in remote evaluation mode.
+                  Labels will be set to -1 for missing values.
+     
+     Returns:
+         Dictionary with 'train_label', 'train_unlabel', 'test' datasets.
+-        In aar_mode, 'train_label' will be None.
++        In remote_eval_mode, 'train_label' will be None.
+     """
+     data_path = Path(data_dir)
+ 
+-    # In AAR mode, skip train_label entirely (workers shouldn't have access)
+-    if aar_mode:
+-        print("[AAR Mode] Skipping train_label.jsonl - workers should not have access to labeled data")
++    # In remote evaluation mode, skip train_label entirely (workers shouldn't have access)
++    if remote_eval_mode:
++        print("[Remote Evaluation Mode] Skipping train_label.jsonl - workers should not have access to labeled data")
+         train_label_data = []
+     else:
+         train_label_path = data_path / train_label_file
+@@ -192,16 +192,16 @@
+             print(f"[Warning] {train_label_file} not found at {train_label_path}")
+             train_label_data = []
+     
+-    # Load train_unlabel - labels optional in AAR mode
++    # Load train_unlabel - labels optional in remote evaluation mode
+     train_unlabel_data = load_jsonl(
+         data_path / train_unlabel_file, 
+-        require_labels=not aar_mode
++        require_labels=not remote_eval_mode
+     )
+     
+-    # Load test - labels optional in AAR mode
++    # Load test - labels optional in remote evaluation mode
+     test_data = load_jsonl(
+         data_path / test_file, 
+-        require_labels=not aar_mode
++        require_labels=not remote_eval_mode
+     )
+ 
+     # Convert to HF datasets
+--- a/w2s_research/core/eval.py
++++ b/w2s_research/core/eval.py
+@@ -3,7 +3,7 @@
+ 
+ Supports two modes:
+ 1. Standard mode: Requires ground truth labels, computes accuracy metrics
+-2. AAR mode: Returns predictions only, no ground truth required
++2. remote evaluation mode: Returns predictions only, no ground truth required
+ """
+ import json
+ import torch
+@@ -138,7 +138,7 @@
+     """
+     Generate predictions on test dataset WITHOUT requiring ground truth labels.
+     
+-    This is the AAR-compliant evaluation function for worker pods. It returns
++    This is the remote-evaluation-compatible evaluation function for worker pods. It returns
+     only predictions, which can be uploaded to S3 for server-side evaluation.
+ 
+     Args:
+@@ -195,7 +195,7 @@
+     extra_metadata: Optional[Dict[str, Any]] = None,
+ ) -> str:
+     """
+-    Save predictions to a JSON file for AAR server-side evaluation.
++    Save predictions to a JSON file for remote evaluation.
+     
+     Args:
+         predictions: List of predicted labels (0 or 1)
+@@ -268,7 +268,7 @@
+     """
+     Compute evaluation metrics from predictions and ground truth labels.
+     
+-    This is the SERVER-SIDE function for AAR. It takes predictions from
++    This is the SERVER-SIDE function for remote evaluation. It takes predictions from
+     worker pods and computes metrics using locally stored ground truth.
+     
+     Args:
+--- a/w2s_research/core/train.py
++++ b/w2s_research/core/train.py
+@@ -275,7 +275,7 @@
+     wandb_group: Optional[str] = None,
+     use_chat_template: Optional[bool] = None,
+     save_total_limit: Optional[int] = None,
+-    aar_mode: bool = False,
++    remote_eval_mode: bool = False,
+ ) -> Dict[str, Any]:
+     """
+     Train model using Unsloth with causal LM approach for classification.
+@@ -308,17 +308,17 @@
+         use_chat_template: Whether to use chat template formatting. If None (default),
+                           auto-detects based on model name: False for base models,
+                           True for chat/instruct models.
+-        aar_mode: If True, returns predictions instead of accuracy (for server-side evaluation).
+-                 Workers don't have access to ground truth labels in AAR mode.
++        remote_eval_mode: If True, returns predictions instead of accuracy (for server-side evaluation).
++                 Workers don't have access to ground truth labels in remote evaluation mode.
+ 
+     Returns:
+         Training results dictionary with:
+         - train_result: Training metrics
+-        - final_eval: Final evaluation results with detailed metrics (or predictions if aar_mode)
++        - final_eval: Final evaluation results with detailed metrics (or predictions if remote_eval_mode)
+         - eval_results: Evaluation results at each eval step/epoch (if eval_strategy != "no")
+         - model: Trained model (only if return_model=True)
+         - tokenizer: Tokenizer
+-        - predictions: List of predictions (only if aar_mode=True)
++        - predictions: List of predictions (only if remote_eval_mode=True)
+     """
+     # Auto-detect use_chat_template based on model name if not explicitly set
+     if use_chat_template is None:
+@@ -600,8 +600,8 @@
+     elif test_formatted is not None:
+         # Final evaluation with detailed metrics (when no callback or eval_strategy="no")
+         print("\n" + "="*80)
+-        if aar_mode:
+-            print("FINAL EVALUATION (AAR Mode - Predictions Only)")
++        if remote_eval_mode:
++            print("FINAL EVALUATION (Remote Evaluation Mode - Predictions Only)")
+         else:
+             print("FINAL EVALUATION")
+         print("="*80)
+@@ -619,8 +619,8 @@
+             # max_ctx is used for Unsloth training, but vLLM evaluation needs extra headroom for long critiques
+             max_model_len = max(max_ctx + 500, 10240) if max_ctx else 10240
+             
+-            if aar_mode:
+-                # AAR Mode: Generate predictions only (no ground truth labels available)
++            if remote_eval_mode:
++                # Remote Evaluation Mode: Generate predictions only (no ground truth labels available)
+                 pred_result = generate_predictions(
+                     test_dataset=test_formatted,
+                     label_token_ids=label_token_ids,
+@@ -633,9 +633,9 @@
+                 final_eval = {
+                     "num_samples": pred_result['num_samples'],
+                     "pred_distribution": pred_result['pred_distribution'],
+-                    "aar_mode": True,
++                    "remote_eval_mode": True,
+                 }
+-                print(f"  [AAR Mode] Generated {len(result['predictions'])} predictions")
++                print(f"  [Remote Evaluation Mode] Generated {len(result['predictions'])} predictions")
+                 print(f"  Prediction distribution: {pred_result['pred_distribution']}")
+             else:
+                 # Normal mode: Evaluate with ground truth labels
+@@ -650,23 +650,23 @@
+                 )
+         else:
+             print("Warning: No checkpoint found for final evaluation")
+-            if aar_mode:
+-                final_eval = {"num_samples": 0, "aar_mode": True}
++            if remote_eval_mode:
++                final_eval = {"num_samples": 0, "remote_eval_mode": True}
+                 result['predictions'] = []
+             else:
+                 final_eval = {"accuracy": 0.0, "correct": 0, "total": 0}
+ 
+         result['final_eval'] = final_eval
+-        if not aar_mode:
++        if not remote_eval_mode:
+             print_evaluation_results(final_eval, prefix="  ")
+ 
+     # Log final evaluation metrics to wandb
+     if 'final_eval' in result:
+-        if aar_mode:
+-            # AAR mode: only log prediction count
++        if remote_eval_mode:
++            # remote evaluation mode: only log prediction count
+             wandb.log({
+                 "final/num_samples": result['final_eval'].get('num_samples', 0),
+-                "final/aar_mode": True,
++                "final/remote_eval_mode": True,
+             })
+         else:
+             wandb.log({
+--- a/w2s_research/ideas/TEMPLATE/run.py
++++ b/w2s_research/ideas/TEMPLATE/run.py
+@@ -11,9 +11,9 @@
+ 4. Minimal training - reuse as much as possible
+ 
+ ==============================================================================
+-AAR MODE (Automated Alignment Research) - AVAILABLE DATA
++REMOTE EVALUATION MODE - AVAILABLE DATA
+ ==============================================================================
+-Worker pods run in AAR mode where ground truth labels are held server-side.
++Worker pods run in remote evaluation mode where ground truth labels are held server-side.
+ 
+ DATA AVAILABLE TO WORKERS:
+ - train_unlabel.jsonl - Training samples (prompts + answer choices)
+@@ -44,7 +44,7 @@
+     RunConfig,
+     create_run_arg_parser,
+     load_dataset,
+-    detect_aar_mode,  # AAR mode detection utility
++    detect_remote_eval_mode,  # remote evaluation mode detection utility
+     train_model,
+     find_latest_checkpoint,
+     load_model_from_checkpoint,
+@@ -78,7 +78,7 @@
+ 
+     Returns:
+         Dictionary with results including weak_acc, transfer_acc, strong_acc, pgr
+-        In AAR mode: includes "predictions" list and "aar_mode": True
++        In remote evaluation mode: includes "predictions" list and "remote_eval_mode": True
+     """
+     print("="*80)
+     print("YOUR CUSTOM EXPERIMENT")
+@@ -92,11 +92,11 @@
+     dataset_name = Path(config.data_dir).name
+ 
+     # ===========================================================================
+-    # AAR MODE DETECTION - Do this EARLY before any data loading
+-    # ===========================================================================
+-    aar_mode = detect_aar_mode(config.data_dir)
+-    if aar_mode:
+-        print("\n⚠️  AAR MODE DETECTED - Ground truth labels NOT available")
++    # REMOTE EVALUATION MODE DETECTION - Do this EARLY before any data loading
++    # ===========================================================================
++    remote_eval_mode = detect_remote_eval_mode(config.data_dir)
++    if remote_eval_mode:
++        print("\n⚠️  REMOTE EVALUATION MODE DETECTED - Ground truth labels NOT available")
+         print("   - Will return predictions instead of accuracy")
+         print("   - PGR will be computed server-side after upload")
+         print("   - DO NOT access dataset['label'] - it contains placeholder values (-1)")
+@@ -138,11 +138,11 @@
+     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+ 
+     # ===========================================================================
+-    # [1/5] LOAD DATA - Use aar_mode parameter for proper handling
++    # [1/5] LOAD DATA - Use remote_eval_mode parameter for proper handling
+     # ===========================================================================
+     print("\n[1/5] Loading data...")
+-    # Pass aar_mode to load_dataset - this handles missing labels gracefully
+-    datasets = load_dataset(config.data_dir, seed=config.seed, aar_mode=aar_mode)
++    # Pass remote_eval_mode to load_dataset - this handles missing labels gracefully
++    datasets = load_dataset(config.data_dir, seed=config.seed, remote_eval_mode=remote_eval_mode)
+     train_unlabel_ds = datasets["train_unlabel"]
+     test_ds = datasets["test"]
+ 
+@@ -156,19 +156,19 @@
+     print(f"Test: {len(test_ds)} samples")
+     
+     # ===========================================================================
+-    # CRITICAL AAR MODE WARNING: DO NOT ACCESS GROUND TRUTH LABELS
+-    # ===========================================================================
+-    # In AAR mode, train_unlabel_ds["label"] and test_ds["label"] contain -1.
++    # CRITICAL REMOTE EVALUATION MODE WARNING: DO NOT ACCESS GROUND TRUTH LABELS
++    # ===========================================================================
++    # In remote evaluation mode, train_unlabel_ds["label"] and test_ds["label"] contain -1.
+     # DO NOT use these for:
+     #   - Computing accuracy
+     #   - Determining which weak model predictions are "errors"
+     #   - Any logic that requires ground truth
+     #
+-    # WRONG (will fail in AAR mode):
+-    #   ground_truth = train_unlabel_ds["label"]  # All -1 in AAR mode!
++    # WRONG (will fail in remote evaluation mode):
++    #   ground_truth = train_unlabel_ds["label"]  # All -1 in remote evaluation mode!
+     #   errors = [1 if pred != gt else 0 for pred, gt in zip(preds, ground_truth)]
+     #
+-    # RIGHT (works in AAR mode):
++    # RIGHT (works in remote evaluation mode):
+     #   confidence = [max(soft) for soft in soft_labels]  # Use weak model outputs
+     #   low_conf_mask = [c < 0.6 for c in confidence]  # Derived from weak model
+     # ===========================================================================
+@@ -261,14 +261,14 @@
+     #
+     # 2. Train strong model with your custom loss/procedure
+     #    NOTE: Use small batch_size + gradient_accumulation_steps to prevent OOM!
+-    #    NOTE: Pass aar_mode=aar_mode to train_model for proper evaluation handling!
++    #    NOTE: Pass remote_eval_mode=remote_eval_mode to train_model for proper evaluation handling!
+     # strong_results = train_model(
+     #     model_name=config.strong_model,
+     #     train_dataset=train_unlabel_with_soft,  # or your processed version
+     #     test_dataset=test_ds,
+     #     batch_size=4,  # Keep small to prevent OOM
+     #     gradient_accumulation_steps=8,  # Effective batch = 32
+-    #     aar_mode=aar_mode,  # IMPORTANT: Pass AAR mode flag!
++    #     remote_eval_mode=remote_eval_mode,  # IMPORTANT: Pass remote evaluation mode flag!
+     #     ...
+     # )
+     #
+@@ -277,16 +277,16 @@
+     # torch.cuda.empty_cache()
+ 
+     # PLACEHOLDER - Replace with actual implementation
+-    # For demonstration, we'll show the AAR-mode-aware evaluation pattern
++    # For demonstration, we'll show the remote-evaluation-aware evaluation pattern
+     transfer_acc = None
+     predictions = None
+ 
+     # ===========================================================================
+-    # [5/5] EVALUATION - Handle AAR mode properly
+-    # ===========================================================================
+-    if aar_mode:
+-        print("\n[5/5] AAR Mode - Generating predictions (accuracy computed server-side)...")
+-        # In AAR mode: generate predictions, don't compute accuracy
++    # [5/5] EVALUATION - Handle remote evaluation mode properly
++    # ===========================================================================
++    if remote_eval_mode:
++        print("\n[5/5] Remote Evaluation Mode - Generating predictions (accuracy computed server-side)...")
++        # In remote evaluation mode: generate predictions, don't compute accuracy
+         # The server will compute accuracy using ground truth labels it has access to
+         #
+         # Example pattern for generating predictions:
+@@ -303,7 +303,7 @@
+         print(f"  Generated {len(predictions)} predictions")
+         print("  Accuracy and PGR will be computed server-side")
+         
+-        # Skip PGR computation in AAR mode
++        # Skip PGR computation in remote evaluation mode
+         pgr = None
+         fixed_weak_mean = None
+         fixed_strong_mean = None
+@@ -346,11 +346,11 @@
+         "strong_model": config.strong_model,
+         "weak_acc": weak_acc,  # Per-seed weak accuracy (for reference)
+         "strong_acc": strong_acc,  # Per-seed ceiling accuracy (for reference)
+-        "transfer_acc": transfer_acc,  # From YOUR custom training (None in AAR mode)
+-        "pgr": pgr,  # Computed using fixed baselines (None in AAR mode)
++        "transfer_acc": transfer_acc,  # From YOUR custom training (None in remote evaluation mode)
++        "pgr": pgr,  # Computed using fixed baselines (None in remote evaluation mode)
+         "fixed_weak_baseline": fixed_weak_mean,  # Fixed weak baseline used for PGR
+         "fixed_strong_baseline": fixed_strong_mean,  # Fixed strong baseline used for PGR
+-        "aar_mode": aar_mode,  # Include AAR mode flag in results
++        "remote_eval_mode": remote_eval_mode,  # Include remote evaluation mode flag in results
+         "config": {
+             "epochs": config.epochs,
+             "lr": config.lr,
+@@ -360,10 +360,10 @@
+         }
+     }
+     
+-    # In AAR mode, include predictions for server-side evaluation
+-    if aar_mode and predictions is not None:
++    # In remote evaluation mode, include predictions for server-side evaluation
++    if remote_eval_mode and predictions is not None:
+         results["predictions"] = predictions
+-        print(f"\n[AAR Mode] Including {len(predictions)} predictions in results")
++        print(f"\n[Remote Evaluation Mode] Including {len(predictions)} predictions in results")
+ 
+     # Cache the result
+     cache.set_seed_result(
+@@ -382,14 +382,14 @@
+ 
+     # Print final summary
+     print("\n" + "="*80)
+-    if aar_mode:
+-        print("FINAL RESULTS (AAR Mode)")
++    if remote_eval_mode:
++        print("FINAL RESULTS (Remote Evaluation Mode)")
+     else:
+         print("FINAL RESULTS")
+     print("="*80)
+     print(f"Weak accuracy: {weak_acc:.4f}")
+     print(f"Ceiling accuracy: {strong_acc:.4f}")
+-    if aar_mode:
++    if remote_eval_mode:
+         print(f"Predictions: {len(predictions)} samples")
+         print("(Transfer accuracy & PGR computed server-side)")
+     else:
+@@ -398,17 +398,17 @@
+             print(f"PGR: {pgr:.4f}")
+     print("="*80)
+     
+-    # CRITICAL: In AAR mode, output results JSON with predictions for orchestrator extraction
++    # CRITICAL: In remote evaluation mode, output results JSON with predictions for orchestrator extraction
+     # The orchestrator's _extract_metrics_from_output() function specifically looks for
+     # these markers to extract the predictions array. Without this, predictions won't be
+     # sent for remote evaluation and PGR will remain 0.0.
+-    if aar_mode and predictions:
++    if remote_eval_mode and predictions:
+         import json
+         print("\n### RESULTS_JSON ###")
+         print(json.dumps({
+             "predictions": predictions,
+             "num_samples": len(predictions),
+-            "aar_mode": True,
++            "remote_eval_mode": True,
+             "weak_model": config.weak_model,
+             "strong_model": config.strong_model,
+         }, indent=2))
+@@ -417,10 +417,10 @@
+         # ===========================================================================
+         # REMOTE EVALUATION: Call server API to get PGR (with retry logic)
+         # ===========================================================================
+-        # This allows seeing PGR during iteration even in AAR mode.
++        # This allows seeing PGR during iteration even in remote evaluation mode.
+         # The evaluate_predictions_remote function has built-in retry with exponential
+         # backoff (5 retries, handles 403/5xx/connection errors).
+-        print("\n[AAR Mode] Calling remote evaluation API...")
++        print("\n[Remote Evaluation Mode] Calling remote evaluation API...")
+         try:
+             eval_result = evaluate_predictions_remote(
+                 predictions=predictions,
+@@ -456,9 +456,9 @@
+     results = run_experiment(config)
+ 
+     print("\nResults:", results)
+-    if results.get("aar_mode"):
+-        print(f"  [AAR Mode] Predictions: {len(results.get('predictions', []))} samples")
+-        print(f"  [AAR Mode] Accuracy/PGR computed server-side")
++    if results.get("remote_eval_mode"):
++        print(f"  [Remote Evaluation Mode] Predictions: {len(results.get('predictions', []))} samples")
++        print(f"  [Remote Evaluation Mode] Accuracy/PGR computed server-side")
+     else:
+         print(f"  Weak accuracy (this seed): {results['weak_acc']:.4f}")
+         if results.get('transfer_acc') is not None:
+--- a/w2s_research/ideas/critic/run.py
++++ b/w2s_research/ideas/critic/run.py
+@@ -46,7 +46,7 @@
+     get_fixed_ceiling_baseline,
+     evaluate_predictions_remote,
+ )
+-from w2s_research.core.data import detect_aar_mode
++from w2s_research.core.data import detect_remote_eval_mode
+ 
+ from w2s_research.ideas.critic.steps import (
+     sft_strong_model_on_weak_critiques,
+@@ -92,12 +92,12 @@
+     # Extract dataset name
+     dataset_name = Path(config.data_dir).name
+ 
+-    # AAR mode detection (ground truth labels held server-side)
+-    aar_mode = detect_aar_mode(config.data_dir)
+-    if aar_mode:
+-        print("\n⚠️  AAR MODE DETECTED - Ground truth labels NOT available")
++    # remote evaluation mode detection (ground truth labels held server-side)
++    remote_eval_mode = detect_remote_eval_mode(config.data_dir)
++    if remote_eval_mode:
++        print("\n⚠️  REMOTE EVALUATION MODE DETECTED - Ground truth labels NOT available")
+         print("   NOTE: Critic pipeline requires labels for judge training.")
+-        print("   AAR mode support for critic is limited - will use remote evaluation for final PGR.")
++        print("   remote evaluation mode support for critic is limited - will use remote evaluation for final PGR.")
+ 
+     # Save original model names for baseline lookups (before they get modified to checkpoint paths)
+     original_strong_model = config.strong_model
+@@ -566,16 +566,16 @@
+     wandb.log(log_dict)
+     wandb.finish()
+ 
+-    # Add AAR mode flag to results
+-    results["aar_mode"] = aar_mode
+-
+-    # NOTE: Full AAR mode support for critic requires refactoring step 11 to return
++    # Add remote evaluation mode flag to results
++    results["remote_eval_mode"] = remote_eval_mode
++
++    # NOTE: Full remote evaluation mode support for critic requires refactoring step 11 to return
+     # predictions instead of computing accuracy locally. GT labels are only needed for
+-    # train_label (judge training), which is allowed in AAR mode as weak supervision.
++    # train_label (judge training), which is allowed in remote evaluation mode as weak supervision.
+     # train_unlabel and test don't need GT labels - they use judge-generated pseudo-labels.
+-    if aar_mode:
+-        print("\n[AAR Mode] Critic pipeline computed accuracy locally.")
+-        print("  Full AAR mode (prediction-based eval) requires step 11 refactoring.")
++    if remote_eval_mode:
++        print("\n[Remote Evaluation Mode] Critic pipeline computed accuracy locally.")
++        print("  Full remote evaluation mode (prediction-based eval) requires step 11 refactoring.")
+ 
+     # Cache result
+     cache.set_seed_result(
+--- a/w2s_research/ideas/train_only_on_confident_labels/run.py
++++ b/w2s_research/ideas/train_only_on_confident_labels/run.py
+@@ -45,7 +45,7 @@
+     get_cached_ceiling_result,
+     evaluate_predictions_remote,
+ )
+-from w2s_research.core.data import BINARY_LABEL_TOKENS, COMPARISON_LABEL_TOKENS, detect_aar_mode
++from w2s_research.core.data import BINARY_LABEL_TOKENS, COMPARISON_LABEL_TOKENS, detect_remote_eval_mode
+ 
+ 
+ # Idea name for caching
+@@ -219,7 +219,7 @@
+     set_seed(config.seed)
+ 
+     # [1/5] Load data
+-    # Note: AAR-compliant - we don't need train_label.jsonl, only train_unlabel.jsonl and test.jsonl
++    # Note: remote-evaluation-compatible - we don't need train_label.jsonl, only train_unlabel.jsonl and test.jsonl
+     print("\n[1/5] Loading data...")
+     datasets = load_dataset(config.data_dir, seed=config.seed)
+     train_unlabel_ds = datasets["train_unlabel"]
+--- a/w2s_research/ideas/ue_fewshot/run.py
++++ b/w2s_research/ideas/ue_fewshot/run.py
+@@ -22,7 +22,7 @@
+     train_model,
+     load_dataset,
+ )
+-from w2s_research.core.data import detect_aar_mode
++from w2s_research.core.data import detect_remote_eval_mode
+ from w2s_research.utils import HierarchicalCache, compute_hyperparam_config_key, get_cached_ceiling_result, get_cached_weak_artifacts, evaluate_predictions_remote
+ from w2s_research.ideas.ue_fewshot.experiment import ue_fewshot, detect_format
+ 
+@@ -45,11 +45,11 @@
+     # Extract dataset name from data_dir
+     dataset_name = Path(config.data_dir).name
+ 
+-    # Detect AAR mode (workers don't have access to labeled data)
+-    aar_mode = detect_aar_mode(config.data_dir) or os.getenv("AAR_MODE", "false").lower() == "true"
++    # Detect remote evaluation mode (workers don't have access to labeled data)
++    remote_eval_mode = detect_remote_eval_mode(config.data_dir) or os.getenv("REMOTE_EVAL_MODE", "false").lower() == "true"
+ 
+     # Load data first to detect format
+-    datasets = load_dataset(config.data_dir, seed=config.seed, aar_mode=aar_mode)
++    datasets = load_dataset(config.data_dir, seed=config.seed, remote_eval_mode=remote_eval_mode)
+     train_unlabel = datasets["train_unlabel"]
+     test_ds = datasets["test"]
+ 
+@@ -67,8 +67,8 @@
+     print(f"Number of iterations: {config.num_iterations} (zero-shot + {len(config.num_demos)} few-shot)")
+     print("="*80)
+ 
+-    if aar_mode:
+-        print("[AAR Mode] Detected - workers should not have access to labeled data")
++    if remote_eval_mode:
++        print("[Remote Evaluation Mode] Detected - workers should not have access to labeled data")
+ 
+     # Check cache first
+     cache = HierarchicalCache()
+@@ -145,8 +145,8 @@
+ 
+     # Step 3: Train strong model on generated labels
+     print("\n[3/4] Training strong model on generated labels...")
+-    if aar_mode:
+-        print("[AAR Mode] Will return predictions instead of accuracy")
++    if remote_eval_mode:
++        print("[Remote Evaluation Mode] Will return predictions instead of accuracy")
+     start_time = time.time()
+ 
+     train_results = train_model(
+@@ -170,13 +170,13 @@
+         seed=config.seed,
+         bf16=config.bf16,
+         fp16=config.fp16,
+-        aar_mode=aar_mode,
++        remote_eval_mode=remote_eval_mode,
+     )
+ 
+     training_time = time.time() - start_time
+ 
+     # Handle results based on mode
+-    if aar_mode:
++    if remote_eval_mode:
+         predictions = train_results.get("predictions", [])
+         transfer_acc = None  # Will be computed server-side
+         print(f"\n>>> Generated {len(predictions)} predictions")
+@@ -185,9 +185,9 @@
+         transfer_acc = train_results["final_eval"]["accuracy"]
+         print(f"\n>>> Strong model test accuracy: {transfer_acc:.4f}")
+ 
+-    # Step 4: Get ceiling performance (skip in AAR mode)
+-    if aar_mode:
+-        print("\n[4/4] Skipping baseline loading (AAR mode - computed server-side)")
++    # Step 4: Get ceiling performance (skip in remote evaluation mode)
++    if remote_eval_mode:
++        print("\n[4/4] Skipping baseline loading (remote evaluation mode - computed server-side)")
+         ceiling_acc = None
+         weak_acc = None
+         pgr = None
+@@ -236,12 +236,12 @@
+     total_time = labeling_time + training_time
+ 
+     print("\n" + "="*80)
+-    if aar_mode:
+-        print("RESULTS (AAR Mode)")
++    if remote_eval_mode:
++        print("RESULTS (Remote Evaluation Mode)")
+     else:
+         print("RESULTS")
+     print("="*80)
+-    if aar_mode:
++    if remote_eval_mode:
+         print(f"Predictions:        {len(predictions)} samples")
+         print("(Transfer accuracy & PGR computed server-side)")
+     else:
+@@ -265,7 +265,7 @@
+         "training_time": training_time,
+         "labeling_time": labeling_time,
+         "total_time": total_time,
+-        "aar_mode": aar_mode,
++        "remote_eval_mode": remote_eval_mode,
+         "config": {
+             "epochs": config.epochs,
+             "lr": config.lr,
+@@ -284,10 +284,10 @@
+         "labeling_logs": iteration_logs,
+     }
+ 
+-    # In AAR mode, include predictions for server-side evaluation
+-    if aar_mode and predictions:
++    # In remote evaluation mode, include predictions for server-side evaluation
++    if remote_eval_mode and predictions:
+         results["predictions"] = predictions
+-        print(f"[AAR Mode] Including {len(predictions)} predictions in results")
++        print(f"[Remote Evaluation Mode] Including {len(predictions)} predictions in results")
+ 
+     # Cache the result
+     cache.set_seed_result(
+@@ -299,20 +299,20 @@
+     )
+     print(f"\n>>> Cached result with key: {config_key}")
+ 
+-    # In AAR mode, output results JSON with predictions for orchestrator extraction
+-    if aar_mode and predictions:
++    # In remote evaluation mode, output results JSON with predictions for orchestrator extraction
++    if remote_eval_mode and predictions:
+         import json
+         print("\n### RESULTS_JSON ###")
+         print(json.dumps({
+             "predictions": predictions,
+             "num_samples": len(predictions),
+-            "aar_mode": True,
++            "remote_eval_mode": True,
+             "strong_model": config.strong_model,
+         }, indent=2))
+         print("### END_RESULTS ###")
+ 
+         # Remote evaluation: Call server API to get PGR (with retry logic)
+-        print("\n[AAR Mode] Calling remote evaluation API...")
++        print("\n[Remote Evaluation Mode] Calling remote evaluation API...")
+         try:
+             eval_result = evaluate_predictions_remote(
+                 predictions=predictions,
+--- a/w2s_research/ideas/ue_zeroshot/run.py
++++ b/w2s_research/ideas/ue_zeroshot/run.py
+@@ -21,7 +21,7 @@
+     train_model,
+     load_dataset,
+ )
+-from w2s_research.core.data import detect_aar_mode
++from w2s_research.core.data import detect_remote_eval_mode
+ from w2s_research.utils import HierarchicalCache, compute_hyperparam_config_key, get_cached_ceiling_result, get_cached_weak_artifacts, evaluate_predictions_remote
+ from w2s_research.ideas.ue_zeroshot.experiment import ue_zeroshot, detect_format, balance_by_confidence
+ 
+@@ -43,12 +43,12 @@
+     Returns:
+         Dictionary with results
+     """
+-    # Detect AAR mode (workers don't have access to labeled data)
++    # Detect remote evaluation mode (workers don't have access to labeled data)
+     import os
+-    aar_mode = detect_aar_mode(config.data_dir) or os.getenv("AAR_MODE", "false").lower() == "true"
++    remote_eval_mode = detect_remote_eval_mode(config.data_dir) or os.getenv("REMOTE_EVAL_MODE", "false").lower() == "true"
+ 
+     # Load data first to detect format
+-    datasets = load_dataset(config.data_dir, seed=config.seed, aar_mode=aar_mode)
++    datasets = load_dataset(config.data_dir, seed=config.seed, remote_eval_mode=remote_eval_mode)
+     train_unlabel = datasets["train_unlabel"]
+     test_ds = datasets["test"]
+ 
+@@ -56,8 +56,8 @@
+     format_type = detect_format(train_unlabel)
+     dataset_name = Path(config.data_dir).name
+ 
+-    if aar_mode:
+-        print("[AAR Mode] Detected - workers should not have access to labeled data")
++    if remote_eval_mode:
++        print("[Remote Evaluation Mode] Detected - workers should not have access to labeled data")
+ 
+     print("="*80)
+     print(f"UE_ZEROSHOT: Zero-shot + Consistency Fixing ({format_type.upper()} format)")
+@@ -146,8 +146,8 @@
+ 
+     # Train strong model
+     print("\n[4/5] Training strong model on generated labels...")
+-    if aar_mode:
+-        print("[AAR Mode] Will return predictions instead of accuracy")
++    if remote_eval_mode:
++        print("[Remote Evaluation Mode] Will return predictions instead of accuracy")
+     start_time = time.time()
+ 
+     train_results = train_model(
+@@ -171,13 +171,13 @@
+         seed=config.seed,
+         bf16=config.bf16,
+         fp16=config.fp16,
+-        aar_mode=aar_mode,
++        remote_eval_mode=remote_eval_mode,
+     )
+ 
+     training_time = time.time() - start_time
+ 
+     # Handle results based on mode
+-    if aar_mode:
++    if remote_eval_mode:
+         predictions = train_results.get("predictions", [])
+         transfer_acc = None  # Will be computed server-side
+         print(f"\n>>> Generated {len(predictions)} predictions")
+@@ -186,9 +186,9 @@
+         transfer_acc = train_results["final_eval"]["accuracy"]
+         print(f"\n>>> Strong model test accuracy: {transfer_acc:.4f}")
+ 
+-    # Get ceiling and weak performance (skip in AAR mode)
+-    if aar_mode:
+-        print("\n[5/5] Skipping baseline loading (AAR mode - computed server-side)")
++    # Get ceiling and weak performance (skip in remote evaluation mode)
++    if remote_eval_mode:
++        print("\n[5/5] Skipping baseline loading (remote evaluation mode - computed server-side)")
+         ceiling_acc = None
+         weak_acc = None
+         pgr = None
+@@ -234,12 +234,12 @@
+     total_time = labeling_time + training_time
+ 
+     print("\n" + "="*80)
+-    if aar_mode:
+-        print("RESULTS (AAR Mode)")
++    if remote_eval_mode:
++        print("RESULTS (Remote Evaluation Mode)")
+     else:
+         print("RESULTS")
+     print("="*80)
+-    if aar_mode:
++    if remote_eval_mode:
+         print(f"Predictions:        {len(predictions)} samples")
+         print("(Transfer accuracy & PGR computed server-side)")
+     else:
+@@ -262,7 +262,7 @@
+         "training_time": training_time,
+         "labeling_time": labeling_time,
+         "total_time": total_time,
+-        "aar_mode": aar_mode,
++        "remote_eval_mode": remote_eval_mode,
+         "config": {
+             "epochs": config.epochs,
+             "lr": config.lr,
+@@ -275,10 +275,10 @@
+         "labeling_logs": iteration_logs,
+     }
+ 
+-    # In AAR mode, include predictions for server-side evaluation
+-    if aar_mode and predictions:
++    # In remote evaluation mode, include predictions for server-side evaluation
++    if remote_eval_mode and predictions:
+         results["predictions"] = predictions
+-        print(f"[AAR Mode] Including {len(predictions)} predictions in results")
++        print(f"[Remote Evaluation Mode] Including {len(predictions)} predictions in results")
+ 
+     cache.set_seed_result(
+         idea_name=idea_name,
+@@ -289,20 +289,20 @@
+     )
+     print(f"\n>>> Cached result with key: {config_key}")
+ 
+-    # In AAR mode, output results JSON with predictions for orchestrator extraction
+-    if aar_mode and predictions:
++    # In remote evaluation mode, output results JSON with predictions for orchestrator extraction
++    if remote_eval_mode and predictions:
+         import json
+         print("\n### RESULTS_JSON ###")
+         print(json.dumps({
+             "predictions": predictions,
+             "num_samples": len(predictions),
+-            "aar_mode": True,
++            "remote_eval_mode": True,
+             "strong_model": config.strong_model,
+         }, indent=2))
+         print("### END_RESULTS ###")
+ 
+         # Remote evaluation: Call server API to get PGR (with retry logic)
+-        print("\n[AAR Mode] Calling remote evaluation API...")
++        print("\n[Remote Evaluation Mode] Calling remote evaluation API...")
+         try:
+             eval_result = evaluate_predictions_remote(
+                 predictions=predictions,
+--- a/w2s_research/ideas/vanilla_w2s/run.py
++++ b/w2s_research/ideas/vanilla_w2s/run.py
+@@ -38,7 +38,7 @@
+     BASELINE_EPOCHS,
+     evaluate_predictions_remote,
+ )
+-from w2s_research.core.data import format_classification_as_causal, detect_aar_mode
++from w2s_research.core.data import format_classification_as_causal, detect_remote_eval_mode
+ from transformers import AutoTokenizer
+ 
+ from .loss import LogconfLossTrainer
+@@ -104,12 +104,12 @@
+     
+     # [1/4] Load data
+     print("\n[1/4] Loading data...")
+-    # Detect AAR mode (workers don't have access to labeled data)
+-    aar_mode = detect_aar_mode(config.data_dir) or os.getenv("AAR_MODE", "false").lower() == "true"
+-    if aar_mode:
+-        print("[AAR Mode] Detected - workers should not have access to labeled data")
+-    
+-    datasets = load_dataset(config.data_dir, seed=config.seed, aar_mode=aar_mode)
++    # Detect remote evaluation mode (workers don't have access to labeled data)
++    remote_eval_mode = detect_remote_eval_mode(config.data_dir) or os.getenv("REMOTE_EVAL_MODE", "false").lower() == "true"
++    if remote_eval_mode:
++        print("[Remote Evaluation Mode] Detected - workers should not have access to labeled data")
++    
++    datasets = load_dataset(config.data_dir, seed=config.seed, remote_eval_mode=remote_eval_mode)
+     train_label_ds = datasets["train_label"]
+     train_unlabel_ds = datasets["train_unlabel"]
+     test_ds = datasets["test"]
+@@ -124,7 +124,7 @@
+     if train_label_ds is not None:
+         print(f"Train (labeled): {len(train_label_ds)}")
+     else:
+-        print(f"Train (labeled): None (AAR mode - no labeled data available)")
++        print(f"Train (labeled): None (remote evaluation mode - no labeled data available)")
+     print(f"Train (unlabeled): {len(train_unlabel_ds)}")
+     print(f"Test: {len(test_ds)}")
+     
+@@ -212,9 +212,9 @@
+         trainer_class = LogconfLossTrainer
+         trainer_kwargs = {"label_token_ids": label_token_ids, "warmup_frac": config.logconf_warmup_frac}
+     
+-    # AAR mode already detected above
+-    if aar_mode:
+-        print("[AAR Mode] Will return predictions instead of accuracy")
++    # remote evaluation mode already detected above
++    if remote_eval_mode:
++        print("[Remote Evaluation Mode] Will return predictions instead of accuracy")
+     
+     start_time = time.time()
+     strong_results = train_model(
+@@ -240,13 +240,13 @@
+         bf16=config.bf16,
+         fp16=config.fp16,
+         seed=config.seed,
+-        aar_mode=aar_mode,
++        remote_eval_mode=remote_eval_mode,
+     )
+     training_time = time.time() - start_time
+     
+     # Handle results based on mode
+-    if aar_mode:
+-        # AAR mode: predictions only, no accuracy
++    if remote_eval_mode:
++        # remote evaluation mode: predictions only, no accuracy
+         predictions = strong_results.get("predictions", [])
+         transfer_acc = None  # Will be computed server-side
+         print(f"\n✓ Generated {len(predictions)} predictions")
+@@ -258,9 +258,9 @@
+         print(f"  Training time: {training_time:.2f}s")
+     
+     # Compute PGR using fixed baselines (averaged across all seeds)
+-    # In AAR mode, PGR will be computed server-side
+-    if aar_mode:
+-        print("\n[5/5] Skipping PGR computation (AAR mode - computed server-side)")
++    # In remote evaluation mode, PGR will be computed server-side
++    if remote_eval_mode:
++        print("\n[5/5] Skipping PGR computation (remote evaluation mode - computed server-side)")
+         pgr = None
+         fixed_weak_mean = None
+         fixed_strong_mean = None
+@@ -306,7 +306,7 @@
+         "fixed_weak_baseline": fixed_weak_mean,
+         "fixed_strong_baseline": fixed_strong_mean,
+         "training_time": training_time,
+-        "aar_mode": aar_mode,
++        "remote_eval_mode": remote_eval_mode,
+         "config": {
+             "epochs": config.epochs,
+             "baseline_epochs": BASELINE_EPOCHS,
+@@ -326,10 +326,10 @@
+         }
+     }
+     
+-    # In AAR mode, include predictions for server-side evaluation
+-    if aar_mode and predictions:
++    # In remote evaluation mode, include predictions for server-side evaluation
++    if remote_eval_mode and predictions:
+         results["predictions"] = predictions
+-        print(f"[AAR Mode] Including {len(predictions)} predictions in results")
++        print(f"[Remote Evaluation Mode] Including {len(predictions)} predictions in results")
+     
+     # Cache result
+     cache.set_seed_result(
+@@ -363,7 +363,7 @@
+         "hard_weak_label_acc": hard_label_acc,
+         "strong_acc": strong_acc,
+         "training_time": training_time,
+-        "aar_mode": aar_mode,
++        "remote_eval_mode": remote_eval_mode,
+     }
+     if transfer_acc is not None:
+         log_dict["transfer_acc"] = transfer_acc
+@@ -377,14 +377,14 @@
+     torch.cuda.empty_cache()
+     
+     print("\n" + "="*80)
+-    if aar_mode:
+-        print("FINAL RESULTS (AAR Mode)")
++    if remote_eval_mode:
++        print("FINAL RESULTS (Remote Evaluation Mode)")
+     else:
+         print("FINAL RESULTS")
+     print("="*80)
+     print(f"Weak accuracy: {weak_acc:.4f}")
+     print(f"Ceiling accuracy: {strong_acc:.4f}")
+-    if aar_mode:
++    if remote_eval_mode:
+         print(f"Predictions: {len(predictions)} samples")
+         print("(Transfer accuracy & PGR computed server-side)")
+     else:
+@@ -393,14 +393,14 @@
+             print(f"PGR: {pgr:.4f}")
+     print("="*80)
+     
+-    # In AAR mode, output results JSON with predictions for orchestrator extraction
+-    if aar_mode and predictions:
++    # In remote evaluation mode, output results JSON with predictions for orchestrator extraction
++    if remote_eval_mode and predictions:
+         import json
+         print("\n### RESULTS_JSON ###")
+         print(json.dumps({
+             "predictions": predictions,
+             "num_samples": len(predictions),
+-            "aar_mode": True,
++            "remote_eval_mode": True,
+             "weak_model": config.weak_model,
+             "strong_model": config.strong_model,
+         }, indent=2))
+@@ -408,7 +408,7 @@
+ 
+         # Remote evaluation: Call server API to get PGR (with retry logic)
+         # Has built-in retry with exponential backoff (5 retries, handles 403/5xx errors)
+-        print("\n[AAR Mode] Calling remote evaluation API...")
++        print("\n[Remote Evaluation Mode] Calling remote evaluation API...")
+         try:
+             eval_result = evaluate_predictions_remote(
+                 predictions=predictions,

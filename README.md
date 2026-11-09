@@ -31,10 +31,14 @@ measured experiment.
 | A-E140b vague collaboration | [#3](https://github.com/andyjphu/allelo-experiments/pull/3) | Fixed-A snapshot |
 | Proposed A-E150 capability framing | [#4](https://github.com/andyjphu/allelo-experiments/pull/4) | A-E140b |
 
-PRs compare each condition with its actual parent. Their base branches identify
-that parent; they are experiment comparisons, not a sequence of product releases.
-Original snapshot commits remain available under `snapshot/` tags. Raw run
-traces and private execution records are retained outside this repository.
+The review PRs were opened against each condition's actual parent. The later
+merges advanced those base branches, so use the original `snapshot/` tags for
+exact condition comparisons. The integrated tree retains the A-E140b package at
+`experiments/e5_lineage/package/` and a byte-identical A-E140 archive at
+`experiments/A-E140/package/`; the fixed-A original is under
+`snapshot/A-E130-fixed-A`. These are historical conditions, not a sequence of
+product releases. Raw run traces and private execution records remain outside
+this repository.
 
 This standalone repository supersedes [project-allelo](https://github.com/andyjphu/project-allelo)
 for further work on this genealogy.

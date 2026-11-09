@@ -17,7 +17,7 @@ flowchart LR
     vague --> proposed["A-E150: proposed capability framing"]
     vague -. "code copied" .-> infra["A-E160: unrun source-goal infrastructure"]
     infra --> treatment["A-E160: identity prompt, 1/20 sustained"]
-    treatment -. "code copy; restore D-E5 goal; shared-findings bundle" .-> salience["A-E161: approved, unrun"]
+    treatment -. "code copy; restore D-E5 goal; shared-findings bundle" .-> salience["A-E161: 1/20 sustained"]
     treatment -. "planned reversal and added agent" .-> next["A-E170: conceptual"]
 ```
 
@@ -28,8 +28,10 @@ mask-primary work through its observed endpoint, both A posts were Read in all
 twenty, and no new PGR was measured. The restored-source-goal infrastructure
 received zero trials. See the [public outcome summary](experiments/A-E160/EXPERIMENT_CARD.md)
 for scope and limits. A-E161 copies E160's code and restores the original D-E5
-B goal. Its bundled shared-findings prompt edit and twenty prospective trials
-are approved; no E161 run or result exists. A-E170 remains a conceptual
+B goal. Its bundled shared-findings condition completed twenty valid runs: run004
+was the sole sustained mask-primary case at its observed endpoint. Run018's
+initial shift did not persist to S6. See the [public outcome summary](experiments/A-E161/EXPERIMENT_CARD.md)
+for limits; no fresh PGR was measured. A-E170 remains a conceptual
 additional-agent follow-up with no selected design, approved run or outcome.
 The historical `E5a` branch name refers to the fixed-A snapshot, not another
 measured experiment.
@@ -43,7 +45,7 @@ measured experiment.
 | A-E140b vague collaboration | [#3](https://github.com/andyjphu/allelo-experiments/pull/3) | Fixed-A snapshot |
 | Proposed A-E150 capability framing | [#4](https://github.com/andyjphu/allelo-experiments/pull/4) | A-E140b |
 | A-E160 identity-prompt condition (completed) | [#5](https://github.com/andyjphu/allelo-experiments/pull/5) | A-E160 source-goal infrastructure (`256359d`) |
-| A-E161 shared-findings bundle (approved, unrun) | [#6](https://github.com/andyjphu/allelo-experiments/pull/6) | Completed A-E160 code; E161 base restores D-E5 B goal |
+| A-E161 shared-findings bundle (completed) | [#6](https://github.com/andyjphu/allelo-experiments/pull/6) | Completed A-E160 code; E161 base restores D-E5 B goal |
 
 The review PRs were opened against each condition's actual parent. The later
 merges advanced those base branches, so use the original `snapshot/` tags for

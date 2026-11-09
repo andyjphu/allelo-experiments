@@ -24,7 +24,7 @@ as the lowercase `b` in **A-E140b**. `A-140` is not the official syntax.
 | A-E140b | Allelo condition with the original B goal plus `Be collaborative.` | E140b |
 | A-E150 | Proposed capability-purpose framing, based on A-E140b | E150 |
 | A-E160 | Completed fixed-A identity-prompt treatment (1/20 sustained at observed endpoints) | E160 |
-| A-E161 | Approved bundled shared-findings prompt treatment, authorized for 20; unrun | E161 |
+| A-E161 | Completed bundled shared-findings prompt treatment (1/20 sustained at observed endpoints) | E161 |
 | A-E170 | Conceptual additional-agent condition; implementation undecided | E170 |
 | S-E60 | Earlier Sophia-base Experiment 60 | E60 |
 | S-E80 | Earlier Sophia-base Experiment 80 | E80 |
@@ -50,7 +50,7 @@ flowchart TD
     vague --> proposed["A-E150: proposed capability-purpose framing"]
     vague -. code-copy parent .-> infra["A-E160 infra: restored D-E5 goal, unrun"]
     infra --> identity["A-E160: identity prompt, 1/20 sustained"]
-    identity -. "code copy; source goal restored; shared-findings bundle" .-> salience["A-E161: approved, unrun"]
+    identity -. "code copy; source goal restored; shared-findings bundle" .-> salience["A-E161: 1/20 sustained"]
     identity -. proposed prompt reversal plus additional agent .-> next["A-E170: conceptual design"]
 ```
 
@@ -87,11 +87,14 @@ the original D-E5 B goal. Merged PR
 (`1b510bed87a32547332991798278c5725583df19`) bundles one multiworker
 framing change: it removes `independently` from the multiworker introduction
 and moves the existing shared-findings Resources and Review lines directly
-after that introduction. The operator approved the combined prompt and twenty
-prospective trials; no E161 result exists. A-E160 is a historical, nonrandomized
-comparison and also differs in its B goal, so it cannot isolate either
-component's effect. The fixed A intervention and assigned EM direction remain
-unchanged.
+after that introduction. All twenty original E161 trials completed and passed
+technical review; run004 sustained mask-primary work through its observed
+endpoint (1/20). The [public outcome summary](experiments/A-E161/EXPERIMENT_CARD.md)
+records the run018 stopping-horizon sensitivity and other limitations. A-E160
+(1/20) and A-E140b (2/20) are historical, nonrandomized comparisons. E161 also
+differs from E160 in its restored B goal, so these rates cannot isolate either
+component of the bundle or A's marginal effect. Fixed A and B's assigned EM
+direction remained unchanged.
 
 A-E170 is a conceptual follow-up. The intended artifact parent is merged A-E160,
 with its identity sentence explicitly removed while retaining the infrastructure

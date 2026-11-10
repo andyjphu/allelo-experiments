@@ -1,6 +1,6 @@
 # Four-session Allelo comparison (v2 draft)
 
-Status: design draft only. Andy has directed preparation and reruns of the four working arms `basev2`, `E140bv2`, `E160v2`, and `E161v2`; these names are not yet allocated official experiment codes. No v2 condition is frozen. Twenty runs per arm are agreed, with step 2 advanced to basev2 preparation; provider-call release remains outstanding. This document does not release provider calls.
+Status: step-2 basev2 canary completed and under review. The four working arms `basev2`, `E140bv2`, `E160v2` and `E161v2` do not yet have allocated official experiment codes. Andy agreed to twenty runs per arm. Only the first counted basev2 run has completed; the other nineteen are held while an uncertain judge request is reconciled. Step 3 has not begun, and this document does not release further runs or provider calls.
 
 ## Arms and ancestry
 
@@ -36,4 +36,4 @@ Proposed 100-returned-B-response cap: count across all four sessions, including 
 
 Historical A-E140/A-E140b/A-E160/A-E161 mask-primary reports used adaptive, unannounced horizons and a different sustained criterion. Their rates cannot be relabeled as any of the three v2 rates; most early-stopped traces cannot supply an S4 outcome. Any later rescore needs its own versioned analysis. These planned arms also do not by themselves isolate A's causal effect without an appropriate comparison.
 
-Open before execution: allocate official codes, determine and review each package's actual parent and complete condition delta, settle cap/resource behavior and exact rendered session text, freeze scoring and technical QA, then obtain separate provider-call release. The [supervision and step-1 review](FOUR_SESSION_V2_SUPERVISION.md) records the pause sequence, measures and retrospective counts.
+Before further runs: allocate official codes, review each package's actual parent and condition delta, confirm cap and exact rendered session text, freeze scoring and technical QA, reconcile the canary judge request and obtain release for the remaining basev2 runs. Step 3 still requires its own review. The [supervision and step-1 review](FOUR_SESSION_V2_SUPERVISION.md) records the pause sequence, measures, retrospective counts and current canary status.

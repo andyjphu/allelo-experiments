@@ -17,6 +17,7 @@ import urllib.request
 from judge import PROMPT, parse
 
 URL = "https://openrouter.ai/api/v1/responses"
+PROMPT_SHA256 = hashlib.sha256(PROMPT.encode("utf-8")).hexdigest()
 
 
 def outside_git(path: Path) -> Path:
@@ -73,7 +74,7 @@ def run(argv=None):
     if not isinstance(packet, dict) or not isinstance(packet.get("opaque_id"), str) or not re.fullmatch(r"T[0-9]{3,}", packet["opaque_id"]) or not isinstance(packet.get("events"), list) or not isinstance(packet.get("completed_sessions"), list):
         raise ValueError("invalid judge packet")
     if not args.send:
-        print(f"DRY RUN: {packet['opaque_id']} sha256={digest}; no approval, credential or provider accessed")
+        print(f"DRY RUN: {packet['opaque_id']} packet_sha256={digest} prompt_sha256={PROMPT_SHA256}; no approval, credential or provider accessed")
         return None
     if not args.approval or not args.output_dir:
         raise ValueError("--send requires --approval and --output-dir")
@@ -81,7 +82,7 @@ def run(argv=None):
     if not approval_path.is_file() or approval_path.is_symlink():
         raise ValueError("approval must be an ordinary off-repo file")
     approval = json.loads(approval_path.read_text(encoding="utf-8"))
-    if not isinstance(approval, dict) or approval.get("packet_sha256") != digest or approval.get("provider") != args.provider or approval.get("model") != args.model or approval.get("reasoning_effort") != "high" or not isinstance(approval.get("reviewer"), str) or not approval["reviewer"].strip():
+    if not isinstance(approval, dict) or approval.get("packet_sha256") != digest or approval.get("prompt_sha256") != PROMPT_SHA256 or approval.get("provider") != args.provider or approval.get("model") != args.model or approval.get("reasoning_effort") != "high" or not isinstance(approval.get("reviewer"), str) or not approval["reviewer"].strip():
         raise ValueError("packet/model/provider not independently approved; do not send")
     out = outside_git(args.output_dir)
     out.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -102,7 +103,7 @@ def run(argv=None):
     intent_fd = os.open(intent, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
     with os.fdopen(intent_fd, "w", encoding="utf-8") as file:
         json.dump({"opaque_id": packet["opaque_id"], "packet_sha256": digest,
-                   "provider": args.provider, "model": args.model, "reasoning_effort": "high",
+                   "prompt_sha256": PROMPT_SHA256, "provider": args.provider, "model": args.model, "reasoning_effort": "high",
                    "status": "request_may_have_been_sent"}, file)
         file.write("\n")
     request = urllib.request.Request(URL, data=json.dumps(payload, ensure_ascii=False).encode(), method="POST",
@@ -111,7 +112,8 @@ def run(argv=None):
     with urllib.request.urlopen(request, timeout=240) as response:
         reply = json.load(response)
     judged = parse(packet, output_text(reply))
-    record = {"opaque_id": packet["opaque_id"], "packet_sha256": digest, "provider": args.provider,
+    record = {"opaque_id": packet["opaque_id"], "packet_sha256": digest, "prompt_sha256": PROMPT_SHA256,
+              "provider": args.provider,
               "model": args.model, "reasoning_effort": "high", "approved_by": approval["reviewer"], "provider_response_id": reply.get("id"),
               "usage": reply.get("usage"), "judge": judged}
     fd = os.open(dest, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)

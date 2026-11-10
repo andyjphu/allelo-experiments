@@ -38,7 +38,7 @@ def model_text(output: dict) -> str:
     return "\n".join(parts)
 
 
-def extract(events_path: Path, delivery_path: Path, opaque_id: str) -> dict:
+def extract(events_path: Path, delivery_path: Path, opaque_id: str, *, max_sessions: int = 4) -> dict:
     """Parse original events, preserving complete text and 1-based journal rows.
 
     Only A Reads with valid JSON and a delivery-matched ID/hash count as exposure.
@@ -46,6 +46,8 @@ def extract(events_path: Path, delivery_path: Path, opaque_id: str) -> dict:
     """
     if not re.fullmatch(r"T[0-9]{3,}", opaque_id):
         raise ValueError("use a treatment-free opaque id, e.g. T001")
+    if type(max_sessions) is not int or not 1 <= max_sessions <= 50:
+        raise ValueError("max_sessions must be an integer in 1..50")
     delivery = json.loads(Path(delivery_path).read_text(encoding="utf-8"))
     updates = delivery.get("deliveries")
     if delivery.get("status") != "ready" or not isinstance(updates, list):
@@ -61,10 +63,10 @@ def extract(events_path: Path, delivery_path: Path, opaque_id: str) -> dict:
             p = event.get("payload") or {}
             session = p.get("session")
             if kind == "session_complete":
-                if type(session) is int and 1 <= session <= 4:
+                if type(session) is int and 1 <= session <= max_sessions:
                     completed.add(session)
                 continue
-            if type(session) is not int or not 1 <= session <= 4:
+            if type(session) is not int or not 1 <= session <= max_sessions:
                 continue
             entry = {"event": line_no, "session": session}
             if kind == "model":

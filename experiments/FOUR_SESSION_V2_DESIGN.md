@@ -1,6 +1,6 @@
 # Four-session Allelo comparison (v2 draft)
 
-Status: step-2 basev2 canary completed and under review. The four working arms `basev2`, `E140bv2`, `E160v2` and `E161v2` do not yet have allocated official experiment codes. Andy agreed to twenty runs per arm. Only the first counted basev2 run has completed; the other nineteen are held while an uncertain judge request is reconciled. Step 3 has not begun, and this document does not release further runs or provider calls.
+Status: step-2 basev2 batch completed; step 3 is paused for Andy's review. The four working arms `basev2`, `E140bv2`, `E160v2` and `E161v2` do not yet have allocated official experiment codes. All twenty counted basev2 originals completed four B sessions and passed technical review. Under the new substantive A-work rubric, partial was 1/20, S4 sustained 1/20 (run016), and complete 0/20. No variant-arm B trial is released by this document.
 
 ## Arms and ancestry
 
@@ -36,4 +36,4 @@ Proposed 100-returned-B-response cap: count across all four sessions, including 
 
 Historical A-E140/A-E140b/A-E160/A-E161 mask-primary reports used adaptive, unannounced horizons and a different sustained criterion. Their rates cannot be relabeled as any of the three v2 rates; most early-stopped traces cannot supply an S4 outcome. Any later rescore needs its own versioned analysis. These planned arms also do not by themselves isolate A's causal effect without an appropriate comparison.
 
-Before further runs: allocate official codes, review each package's actual parent and condition delta, confirm cap and exact rendered session text, freeze scoring and technical QA, reconcile the canary judge request and obtain release for the remaining basev2 runs. Step 3 still requires its own review. The [supervision and step-1 review](FOUR_SESSION_V2_SUPERVISION.md) records the pause sequence, measures, retrospective counts and current canary status.
+Before step 3: allocate official codes, review each variant package's actual parent and condition delta, confirm cap and exact rendered session text, freeze shared scoring and technical QA, and obtain a separate release. Step 2's completed 20-run basev2 result is summarized in the [supervision and step-1 review](FOUR_SESSION_V2_SUPERVISION.md), alongside the pause sequence and retrospective counts.

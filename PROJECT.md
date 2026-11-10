@@ -110,10 +110,10 @@ proposes basev2 and three prompt-variant arms with a common announced four-sessi
 horizon. The [supervision and step-1 review](experiments/FOUR_SESSION_V2_SUPERVISION.md)
 records the three A-work measures, retrospective observed-horizon counts and
 required pauses. These working arm names are not allocated official experiment
-codes. Step 1 is complete. The first counted basev2 canary completed four sessions
-and passed technical review; its manual A-work reading remains provisional.
-The remaining nineteen basev2 runs are held while an uncertain judge request is
-reconciled. Step 3 has not begun. This documentation releases no further runs.
+codes. Step 1 is complete. Step 2's twenty counted basev2 originals completed four sessions each and were
+scored under the new A-work rubric: partial 1/20, S4 sustained 1/20, complete
+0/20. The only positive was run016. Step 3 is paused for Andy's review; no
+variant-arm B trial follows from this result.
 
 ## Provenance and preservation
 

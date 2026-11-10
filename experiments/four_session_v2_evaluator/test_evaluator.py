@@ -2,6 +2,7 @@
 import hashlib
 import io
 import json
+import subprocess
 import threading
 from unittest import mock
 import tempfile
@@ -241,14 +242,21 @@ class SyntheticTests(unittest.TestCase):
                     "--approval", str(approval), "--output-dir", str(out), "--send"]
             with mock.patch.dict("os.environ", {"OPENROUTER_API_KEY": "synthetic-key"}):
                 with mock.patch.object(launch_judge, "outside_git", side_effect=lambda x: x.resolve()):
-                    with mock.patch.object(launch_judge.subprocess, "Popen") as spawned:
-                        spawned.return_value.pid = 4242
-                        self.assertEqual(launch_judge.main(argv), 4242)
-                        self.assertTrue(spawned.call_args.kwargs["start_new_session"])
+                    with mock.patch.object(launch_judge.subprocess, "run") as spawned:
+                        spawned.return_value.returncode = 0
+                        session = launch_judge.main(argv)
+                        self.assertTrue(session.startswith("judge_T001_"))
+                        self.assertIn("-dmS", spawned.call_args.args[0])
                         self.assertEqual(spawned.call_args.kwargs["env"]["OPENROUTER_API_KEY"], "synthetic-key")
-                        self.assertEqual(len(list(out.glob("*.launcher.log"))), 1)
+                        case_dirs = list(out.glob("*.screen"))
+                        self.assertEqual(len(case_dirs), 1)
+                        self.assertTrue((case_dirs[0] / "wrapper.sh").is_file())
+                        self.assertTrue((case_dirs[0] / "dispatch_intent.json").is_file())
+                        self.assertTrue((case_dirs[0] / "screen_start_exitcode").is_file())
                         with self.assertRaises(FileExistsError): launch_judge.main(argv)
                         self.assertEqual(spawned.call_count, 1)
+                subprocess.run(["/bin/bash", "-n", str(case_dirs[0] / "wrapper.sh")], check=True,
+                               capture_output=True)
 
     def test_extractor_optional_all_observed_sessions(self):
         rows = [{"kind": "session_complete", "payload": {"session": s}} for s in range(1, 7)]

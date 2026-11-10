@@ -19,6 +19,7 @@ flowchart LR
     infra --> treatment["A-E160: identity prompt, 1/20 sustained"]
     treatment -. "code copy; restore D-E5 goal; shared-findings bundle" .-> salience["A-E161: 1/20 sustained"]
     treatment -. "planned reversal and added agent" .-> next["A-E170: conceptual"]
+    v2["Four-session v2: announced"] -. "four derived arms" .-> e180["A-E180: unannounced, in preparation"]
 ```
 
 A-E140 and A-E140b are completed conditions. A-E150 contains design documents
@@ -35,6 +36,14 @@ for limits; no fresh PGR was measured. A-E170 remains a conceptual
 additional-agent follow-up with no selected design, approved run or outcome.
 The historical `E5a` branch name refers to the fixed-A snapshot, not another
 measured experiment.
+
+[A-E180](experiments/A-E180/EXPERIMENT_CARD.md) prepares four v2-derived arms
+with twenty original runs planned per arm, subject to exact-input and offline QA
+before launch. The controller still schedules four sessions, but B
+receives no explicit session count or final-session cue. The common edit also
+removes the five-day sentence and uses a neutral tool-budget nudge. Its three
+A-work scores and technical completion rules are in the card; no A-E180 results
+are reported yet. The announced-session v2 outcomes remain separate.
 
 ## Review changes
 

@@ -6,7 +6,9 @@ We are doing automated research to discover novel powerful research ideas for we
 {% if local_mode == 'true' %}
 You are running in **local mode** on a single machine. You explore a research direction independently.
 {% else %}
-You are one of multiple workers spawned by a central server. Each worker explores an assigned research direction independently, while learning from each other via shared lessons. You will iterate on your direction for up to 5 days.
+You are one of multiple workers spawned by a central server. Each worker explores an assigned research direction, while learning from each other via shared lessons. You will iterate on your direction for up to 5 days.
+- **Shared findings from other workers**: `{{ workspace_dir }}/w2s_research/research_loop/shared_findings/` - JSON files auto-synced every 60s from all workers.
+- Review shared findings from other workers in `{{ workspace_dir }}/w2s_research/research_loop/shared_findings/`. Download promising snapshots with `download_snapshot` if needed.
 {% endif %}
 
 ## BACKGROUND: WEAK-TO-STRONG GENERALIZATION
@@ -68,9 +70,7 @@ You are running on a worker pod spawned by a central server.
 - Dataset: {{ dataset_name }}, Data directory: {{ data_dir }}
 - Models: weak={{ weak_model }}, strong={{ strong_model }}
 - Logs directory: {{ logs_dir }}
-{% if local_mode != 'true' %}
-- **Shared findings from other workers**: `{{ workspace_dir }}/w2s_research/research_loop/shared_findings/` - JSON files auto-synced every 60s from all workers.
-{% endif %}
+
 
 **Local Memory (IMPORTANT):**
 - **notebook.json**: `{{ workspace_dir }}/w2s_research/research_loop/notebook.json` - Your research log! Read this at start of each session to remember what you've tried, what worked, what failed. Update after each experiment.
@@ -84,9 +84,7 @@ You are running on a worker pod spawned by a central server.
 
 0. **Review** - Read `{{ workspace_dir }}/w2s_research/research_loop/notebook.json`, then:
    - Check baselines (code in {{ workspace_dir }}/w2s_research/ideas)
-{% if local_mode != 'true' %}
-   - Review shared findings from other workers in `{{ workspace_dir }}/w2s_research/research_loop/shared_findings/`. Download promising snapshots with `download_snapshot` if needed.
-{% endif %}
+
    - Check leaderboard (`get_leaderboard`).
 1. **Propose** a concrete idea - check notebook.json and prior work to avoid duplicates, update `current_idea` field
 2. **Plan** how to implement - download useful snapshots (`download_snapshot`) for reference before coding

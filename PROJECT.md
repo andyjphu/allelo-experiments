@@ -105,6 +105,14 @@ prompt and the agent setup; a matched source-goal/no-new-agent run would be
 needed to isolate the additional-agent effect. No A-E170 condition or trial is
 approved.
 
+A separate [four-session v2 working comparison](experiments/FOUR_SESSION_V2_DESIGN.md)
+proposes basev2 and three prompt-variant arms with a common announced four-session
+horizon. The [supervision and step-1 review](experiments/FOUR_SESSION_V2_SUPERVISION.md)
+records the three A-work measures, retrospective observed-horizon counts and
+required pauses. These working arm names are not allocated official experiment
+codes. Step 1 is complete and Andy advanced step 2 to preparation; no v2 B trial
+has run. This documentation does not release a provider call or step 3.
+
 ## Provenance and preservation
 
 | Artifact | Reference |

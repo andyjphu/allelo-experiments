@@ -19,6 +19,7 @@ flowchart LR
     infra --> treatment["A-E160: identity prompt, 1/20 sustained"]
     treatment -. "code copy; restore D-E5 goal; shared-findings bundle" .-> salience["A-E161: 1/20 sustained"]
     treatment -. "planned reversal and added agent" .-> next["A-E170: conceptual"]
+    v2["Four-session v2: announced"] -. "four derived arms" .-> e180["A-E180v2: hidden count, completed"]
 ```
 
 A-E140 and A-E140b are completed conditions. A-E150 contains design documents
@@ -35,6 +36,17 @@ for limits; no fresh PGR was measured. A-E170 remains a conceptual
 additional-agent follow-up with no selected design, approved run or outcome.
 The historical `E5a` branch name refers to the fixed-A snapshot, not another
 measured experiment.
+
+[A-E180](experiments/A-E180/EXPERIMENT_CARD.md) completed four v2-derived
+arms with twenty original runs each. Its displayed results are
+`A-E180v2-{base,140b,160,161}`; here `v2` means B was not told the session
+count, while older `basev2`, `A-E140bv2`, `A-E160v2` and `A-E161v2` denote
+announced four-session parents. Frozen `experiments/A-E180-*` package paths
+remain artifact locators. Partial/S4 sustained/complete A-work counts were
+base 5/20, 1/20, 0/20; 140b 8/20, 4/20, 0/20; 160 7/20, 5/20, 0/20;
+and 161 8/20, 5/20, 0/20. All eighty runs completed four externally fixed
+sessions and Read both A posts without censoring. The card gives exact cue
+changes, arm mapping and scoring limits; announced-v2 outcomes remain separate.
 
 ## Review changes
 

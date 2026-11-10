@@ -26,6 +26,7 @@ as the lowercase `b` in **A-E140b**. `A-140` is not the official syntax.
 | A-E160 | Completed fixed-A identity-prompt treatment (1/20 sustained at observed endpoints) | E160 |
 | A-E161 | Completed bundled shared-findings prompt treatment (1/20 sustained at observed endpoints) | E161 |
 | A-E170 | Conceptual additional-agent condition; implementation undecided | E170 |
+| A-E180 | Completed hidden-session-count family: four v2-derived arms, 20/20 four-session originals per arm | E180 |
 | S-E60 | Earlier Sophia-base Experiment 60 | E60 |
 | S-E80 | Earlier Sophia-base Experiment 80 | E80 |
 
@@ -52,6 +53,7 @@ flowchart TD
     infra --> identity["A-E160: identity prompt, 1/20 sustained"]
     identity -. "code copy; source goal restored; shared-findings bundle" .-> salience["A-E161: 1/20 sustained"]
     identity -. proposed prompt reversal plus additional agent .-> next["A-E170: conceptual design"]
+    v2["Four-session v2: announced horizon"] -. "four derived arms; horizon cues removed" .-> e180["A-E180v2: hidden count, completed"]
 ```
 
 The `E5a` branch label is a retrospective alias for the frozen fixed-A condition
@@ -106,14 +108,29 @@ needed to isolate the additional-agent effect. No A-E170 condition or trial is
 approved.
 
 A separate [four-session v2 working comparison](experiments/FOUR_SESSION_V2_DESIGN.md)
-proposes basev2 and three prompt-variant arms with a common announced four-session
+documents basev2 and three prompt-variant arms with a common announced four-session
 horizon. The [four-session v2 supervision and outcomes](experiments/FOUR_SESSION_V2_SUPERVISION.md)
-records the three A-work measures, retrospective observed-horizon counts and
-required pauses. These working arm names are not allocated official experiment
-codes. Step 1 is complete. Step 2's twenty counted basev2 originals completed four sessions each and were
-scored under the new A-work rubric: partial 1/20, S4 sustained 1/20, complete
-0/20. The only positive was run016. Step 3 is paused for Andy's review; no
-variant-arm B trial follows from this result.
+records the three A-work measures and retrospective observed-horizon counts.
+The completed basev2 batch scored partial 1/20, S4 sustained 1/20, complete
+0/20. The completed variant batches scored A-E140bv2 0/20, 0/20, 0/20;
+A-E160v2 0/20, 0/20, 0/20; and A-E161v2 1/20, 1/20, 0/20 on those same
+three measures. All twenty originals per arm completed four sessions. These
+variant results are documented in [draft PR #13](https://github.com/andyjphu/allelo-experiments/pull/13),
+which was open at the time of this edit; they are not yet merged into main.
+
+[A-E180](experiments/A-E180/EXPERIMENT_CARD.md) is the completed genealogy family
+with four result-display arms `A-E180v2-{base,140b,160,161}`. In A-E180v2,
+`v2` means the session count was hidden from B; older `basev2`, `A-E140bv2`,
+`A-E160v2` and `A-E161v2` are the announced four-session parents. The frozen
+`experiments/A-E180-*` package paths are artifact locators, not renamed runs.
+All eighty originals completed four externally scheduled B sessions with fixed A
+and both A posts Read, without cap hits or censoring. The partial/S4 sustained/
+complete A-work counts were base **5/20, 1/20, 0/20**; 140b **8/20, 4/20,
+0/20**; 160 **7/20, 5/20, 0/20**; and 161 **8/20, 5/20, 0/20**. The bundle
+removed session-count and final-session cues, a five-day statement and the
+anticipatory budget nudge. See the card for the exact common change, per-arm
+mapping, independent boundary review and limits. These sequential batches do
+not isolate a cue's causal effect or A's contribution.
 
 ## Provenance and preservation
 

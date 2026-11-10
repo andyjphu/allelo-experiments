@@ -26,7 +26,7 @@ as the lowercase `b` in **A-E140b**. `A-140` is not the official syntax.
 | A-E160 | Completed fixed-A identity-prompt treatment (1/20 sustained at observed endpoints) | E160 |
 | A-E161 | Completed bundled shared-findings prompt treatment (1/20 sustained at observed endpoints) | E161 |
 | A-E170 | Conceptual additional-agent condition; implementation undecided | E170 |
-| A-E180 | Working family for four externally fixed sessions with no explicit session-count or final-session cues to B; four derived v2 arms in preparation, with no trials yet reported | E180 |
+| A-E180 | Completed hidden-session-count family: four v2-derived arms, 20/20 four-session originals per arm | E180 |
 | S-E60 | Earlier Sophia-base Experiment 60 | E60 |
 | S-E80 | Earlier Sophia-base Experiment 80 | E80 |
 
@@ -53,7 +53,7 @@ flowchart TD
     infra --> identity["A-E160: identity prompt, 1/20 sustained"]
     identity -. "code copy; source goal restored; shared-findings bundle" .-> salience["A-E161: 1/20 sustained"]
     identity -. proposed prompt reversal plus additional agent .-> next["A-E170: conceptual design"]
-    v2["Four-session v2: announced horizon"] -. "four derived arms; horizon cues removed" .-> e180["A-E180: unannounced horizon, in preparation"]
+    v2["Four-session v2: announced horizon"] -. "four derived arms; horizon cues removed" .-> e180["A-E180v2: hidden count, completed"]
 ```
 
 The `E5a` branch label is a retrospective alias for the frozen fixed-A condition
@@ -118,15 +118,19 @@ three measures. All twenty originals per arm completed four sessions. These
 variant results are documented in [draft PR #13](https://github.com/andyjphu/allelo-experiments/pull/13),
 which was open at the time of this edit; they are not yet merged into main.
 
-[A-E180](experiments/A-E180/EXPERIMENT_CARD.md) is a new working family derived
-from all four v2 arms. It keeps four externally scheduled B sessions and fixed A,
-while removing explicit session-count and final-session cues, the non-local
-five-day statement, and the anticipatory budget nudge. Twenty originals per arm
-are planned; launching depends on the approved exact-input and offline QA checks,
-not this documentation. The card records the three A-work measures and technical
-completion rules. It reports no A-E180 result. Its condition and execution record
-are separate from the historical adaptive batches and the announced-session v2
-comparison.
+[A-E180](experiments/A-E180/EXPERIMENT_CARD.md) is the completed genealogy family
+with four result-display arms `A-E180v2-{base,140b,160,161}`. In A-E180v2,
+`v2` means the session count was hidden from B; older `basev2`, `A-E140bv2`,
+`A-E160v2` and `A-E161v2` are the announced four-session parents. The frozen
+`experiments/A-E180-*` package paths are artifact locators, not renamed runs.
+All eighty originals completed four externally scheduled B sessions with fixed A
+and both A posts Read, without cap hits or censoring. The partial/S4 sustained/
+complete A-work counts were base **5/20, 1/20, 0/20**; 140b **8/20, 4/20,
+0/20**; 160 **7/20, 5/20, 0/20**; and 161 **8/20, 5/20, 0/20**. The bundle
+removed session-count and final-session cues, a five-day statement and the
+anticipatory budget nudge. See the card for the exact common change, per-arm
+mapping, independent boundary review and limits. These sequential batches do
+not isolate a cue's causal effect or A's contribution.
 
 ## Provenance and preservation
 

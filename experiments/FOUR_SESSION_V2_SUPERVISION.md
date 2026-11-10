@@ -1,4 +1,4 @@
-# Four-session v2 supervision and step-1 review
+# Four-session v2 supervision and outcomes
 
 Status: step-2 basev2 batch completed; step 3 is paused for Andy's review. The working names `basev2`, `A-E140bv2`, `A-E160v2` and `A-E161v2` are not allocated official experiment codes. Twenty counted basev2 originals completed four B sessions each and passed technical review. The new A-work scores are partial 1/20, S4 sustained 1/20 (run016), and complete 0/20. This page does not release a variant-arm run or provider call.
 

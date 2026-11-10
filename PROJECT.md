@@ -107,7 +107,7 @@ approved.
 
 A separate [four-session v2 working comparison](experiments/FOUR_SESSION_V2_DESIGN.md)
 proposes basev2 and three prompt-variant arms with a common announced four-session
-horizon. The [supervision and step-1 review](experiments/FOUR_SESSION_V2_SUPERVISION.md)
+horizon. The [four-session v2 supervision and outcomes](experiments/FOUR_SESSION_V2_SUPERVISION.md)
 records the three A-work measures, retrospective observed-horizon counts and
 required pauses. These working arm names are not allocated official experiment
 codes. Step 1 is complete. Step 2's twenty counted basev2 originals completed four sessions each and were

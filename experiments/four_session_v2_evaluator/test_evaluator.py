@@ -14,6 +14,7 @@ from rollup import cohort, rollup
 from run_judge import run, outside_git, PROMPT_SHA256
 import historical
 import historical_batch
+import launch_judge
 
 
 def packet(completed=(1, 2, 3, 4)):
@@ -203,6 +204,51 @@ class SyntheticTests(unittest.TestCase):
             symlink = private / "packet-link.json"
             symlink.symlink_to(packet_file)
             with self.assertRaises(ValueError): outside_git(symlink)
+
+    def test_single_judge_saves_raw_before_invalid_schema(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp).resolve()
+            packet_file, approval, out = root / "T001.json", root / "approval.json", root / "responses"
+            packet_file.write_text(json.dumps(packet()))
+            approval.write_text(json.dumps({"packet_sha256": hashlib.sha256(packet_file.read_bytes()).hexdigest(),
+                "prompt_sha256": PROMPT_SHA256, "provider": "openrouter", "model": "synthetic/model",
+                "reasoning_effort": "high", "reviewer": "synthetic reviewer"}))
+            class Response(io.BytesIO):
+                status = 200
+            invalid = {"output": [{"type": "message", "content": [
+                {"type": "output_text", "text": json.dumps({"sessions": []})}]}]}
+            argv = ["--packet", str(packet_file), "--provider", "openrouter", "--model", "synthetic/model",
+                    "--send", "--approval", str(approval), "--output-dir", str(out)]
+            with mock.patch.dict("os.environ", {"OPENROUTER_API_KEY": "synthetic-key"}):
+                with mock.patch("urllib.request.urlopen", return_value=Response(json.dumps(invalid).encode())) as fake:
+                    with self.assertRaises(ValueError): run(argv)
+                    self.assertEqual(fake.call_args.kwargs["timeout"], 600)
+                    self.assertEqual(len(list(out.glob("*.raw.json"))), 1)
+                    self.assertEqual(len(list(out.glob("*.intent.json"))), 1)
+                    self.assertEqual(len(list(out.glob("T001-*.json"))), 2)
+                    with self.assertRaises(FileExistsError): run(argv)
+                    self.assertEqual(fake.call_count, 1)
+
+    def test_detached_launcher_mock_and_duplicate_guard(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp).resolve()
+            packet_file, approval, out = root / "T001.json", root / "approval.json", root / "responses"
+            packet_file.write_text(json.dumps(packet()))
+            approval.write_text(json.dumps({"packet_sha256": hashlib.sha256(packet_file.read_bytes()).hexdigest(),
+                "prompt_sha256": PROMPT_SHA256, "provider": "openrouter", "model": "synthetic/model",
+                "reasoning_effort": "high", "reviewer": "synthetic reviewer"}))
+            argv = ["--packet", str(packet_file), "--provider", "openrouter", "--model", "synthetic/model",
+                    "--approval", str(approval), "--output-dir", str(out), "--send"]
+            with mock.patch.dict("os.environ", {"OPENROUTER_API_KEY": "synthetic-key"}):
+                with mock.patch.object(launch_judge, "outside_git", side_effect=lambda x: x.resolve()):
+                    with mock.patch.object(launch_judge.subprocess, "Popen") as spawned:
+                        spawned.return_value.pid = 4242
+                        self.assertEqual(launch_judge.main(argv), 4242)
+                        self.assertTrue(spawned.call_args.kwargs["start_new_session"])
+                        self.assertEqual(spawned.call_args.kwargs["env"]["OPENROUTER_API_KEY"], "synthetic-key")
+                        self.assertEqual(len(list(out.glob("*.launcher.log"))), 1)
+                        with self.assertRaises(FileExistsError): launch_judge.main(argv)
+                        self.assertEqual(spawned.call_count, 1)
 
     def test_extractor_optional_all_observed_sessions(self):
         rows = [{"kind": "session_complete", "payload": {"session": s}} for s in range(1, 7)]

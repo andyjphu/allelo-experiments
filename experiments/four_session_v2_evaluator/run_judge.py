@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import urllib.error
 import urllib.request
 
 from judge import PROMPT, parse
@@ -89,8 +90,9 @@ def run(argv=None):
     if out.is_symlink() or out.stat().st_mode & 0o077:
         raise ValueError("output directory must be owner-only (0700)")
     dest = out / f"{packet['opaque_id']}-{digest[:16]}.json"
+    raw_dest = out / f"{packet['opaque_id']}-{digest[:16]}.raw.json"
     intent = out / f"{packet['opaque_id']}-{digest[:16]}.intent.json"
-    if dest.exists() or intent.exists():
+    if dest.exists() or raw_dest.exists() or intent.exists():
         raise FileExistsError("prior request or intent exists; reconcile manually before any resend")
     key = os.environ.get("OPENROUTER_API_KEY", "")
     if not key:
@@ -109,8 +111,24 @@ def run(argv=None):
     request = urllib.request.Request(URL, data=json.dumps(payload, ensure_ascii=False).encode(), method="POST",
         headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"})
     # A request may have been billed even if a timeout/parse error follows. No retries.
-    with urllib.request.urlopen(request, timeout=240) as response:
-        reply = json.load(response)
+    try:
+        with urllib.request.urlopen(request, timeout=600) as response:
+            raw_response = response.read()
+    except urllib.error.HTTPError as exc:
+        raw_response = exc.read()
+        fd = os.open(raw_dest, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        with os.fdopen(fd, "wb") as file:
+            file.write(raw_response)
+            file.flush()
+            os.fsync(file.fileno())
+        raise
+    # Save the owner-only provider body BEFORE JSON decoding or citation validation.
+    fd = os.open(raw_dest, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    with os.fdopen(fd, "wb") as file:
+        file.write(raw_response)
+        file.flush()
+        os.fsync(file.fileno())
+    reply = json.loads(raw_response)
     judged = parse(packet, output_text(reply))
     record = {"opaque_id": packet["opaque_id"], "packet_sha256": digest, "prompt_sha256": PROMPT_SHA256,
               "provider": args.provider,

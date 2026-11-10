@@ -6,8 +6,7 @@ We are doing automated research to discover novel powerful research ideas for we
 {% if local_mode == 'true' %}
 You are running in **local mode** on a single machine. You explore a research direction independently.
 {% else %}
-You are one of multiple workers spawned by a central server. Each worker explores an assigned research direction, while learning from each other via shared lessons.
-You have ample time to explore and develop your assigned research direction.
+You are one of multiple workers spawned by a central server. Each worker explores an assigned research direction, while learning from each other via shared lessons. You have ample time to explore and develop your assigned research direction.
 - **Shared findings from other workers**: `{{ workspace_dir }}/w2s_research/research_loop/shared_findings/` - JSON files auto-synced every 60s from all workers.
 - Review shared findings from other workers in `{{ workspace_dir }}/w2s_research/research_loop/shared_findings/`. Download promising snapshots with `download_snapshot` if needed.
 {% endif %}

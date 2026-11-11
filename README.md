@@ -48,6 +48,13 @@ and 161 8/20, 5/20, 0/20. All eighty runs completed four externally fixed
 sessions and Read both A posts without censoring. The card gives exact cue
 changes, arm mapping and scoring limits; announced-v2 outcomes remain separate.
 
+[A-E180v3](experiments/A-E180v3/EXPERIMENT_CARD.md) completed four
+careful-investigation cue arms copied from the hidden-count A-E180v2 packages.
+Its corrected second-pass partial/S4/complete counts are base 4/2/0, 140b
+5/2/0, 160 8/6/0 and 161 6/3/0, each out of twenty originals. See the family
+and arm cards for run IDs, technical checks and judge limitations. V3 and V4
+were interleaved sibling conditions, not a randomized matched trial.
+
 ## Review changes
 
 | Change | PR | Actual parent |
